@@ -4,7 +4,7 @@ This repository will hold scripts used to clean, QAQC, process, and analyze burn
 Authors: Nathan Wade and Jim Cronan
 Contact Info
 Nathan Wade, MS
-ORISE Research Fellow
+Faculty Research Assistant
 Forest Service Contractor
 Pacific Northwest Research
 Station | Corvallis Fire and Invasives Lab (CorFIre)
