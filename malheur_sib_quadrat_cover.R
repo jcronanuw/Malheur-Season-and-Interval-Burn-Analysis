@@ -1,10 +1,14 @@
-#This code takes the quadrat cover data from the entire season of burn study and groups it to the 2025 functional groups. It then summarizes the total cover data to the plot level, the stand level, and the treatment level for analyses and graphing.
+#This code takes the quadrat cover data from the entire season of burn study and groups it to the 2025 functional groups (native groups: perennial forbs, annual forbs, grasses, and sedges; and then invasives and shrubs by species). It then summarizes the total cover data to the plot level, the stand level, and the treatment level for analyses and graphing.
+
+#Jim Cronan and Nathan Wade
+#February 27, 2026
+
 
 library(tidyverse)
 
 #set input & output folders to import data####
 ##dataframe folders
-input <- "C:/Users/NathanWade/Box/01. nathan.wade Workspace/Season of burn/Exploration/quadrats"
+input <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Invasives"
 
 #importing data
 cover02 <- read.csv(paste0(input, "/Cover_2002.csv"))
@@ -384,7 +388,7 @@ coverstudy <- coveryr %>% group_by(Yr, Exotic, Group) %>%
 
 
 ##############################################
-#graphing####
+#graphing native herbaceous species (FOR REFERENCE ONLY)####
 #year*treatment bar graph for native herbaceous species
 (ggplot(coveryr %>% filter(Group == "Pforb" | Group == "Aforb" | Group == "Grass" | Group == "Sedge"), aes(x = Group, y = Cover, fill = Treatment)) +
    geom_bar(stat = "identity", position = position_dodge()) +
@@ -412,6 +416,7 @@ coverstudy <- coveryr %>% group_by(Yr, Exotic, Group) %>%
     theme_bw())
 
 
+#graphing cheatgrass####
 #year*treatment bar graph for BRTE cover
 (ggplot(coveryr %>% filter(Group == "BRTE"), aes(x = Yr, y = Cover, fill = Treatment)) +
     geom_bar(stat = "identity", position = position_dodge()) +
@@ -439,8 +444,8 @@ coverstudy <- coveryr %>% group_by(Yr, Exotic, Group) %>%
     theme_bw())
 
 
-#year*treatment bar graph for the 4 most common shrubs
-(ggplot(coveryr %>% filter(Group == "Pforb" | Group == "Aforb" | Group == "Grass" | Group == "Sedge"), aes(x = Group, y = Cover, fill = Treatment)) +
+#year*treatment bar graph for snowbrush and rabbitbrush
+(ggplot(coveryr %>% filter(Group == "CEVE" | Group == "RABBIT"), aes(x = Group, y = Cover, fill = Treatment)) +
     geom_bar(stat = "identity", position = position_dodge()) +
     geom_errorbar(aes(ymin = Cover, ymax = Cover + sd_cover),
                   width = 0, position = position_dodge(0.9)) +
@@ -453,14 +458,25 @@ coverstudy <- coveryr %>% group_by(Yr, Exotic, Group) %>%
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 60, hjust = 1))
 
 #line graph of the 4 most common shrubs throughout the years
+(ggplot(coveryr %>% filter(Group == "CEVE" | Group == "RABBIT"), aes(x = Yr, y = Cover, color = Treatment, group = Treatment)) +
+    geom_line() +
+    geom_point() +
+    geom_errorbar(aes(ymin = Cover - sd_cover,
+                      ymax = Cover + sd_cover),
+                  width = 0.2) +
+    facet_wrap(~Group) +
+    labs(x = "Year",
+         y = "% Cover",
+         color = "Treatment") +
+    theme_bw())
 
 
-#######################################
-#cheatgrass####
-brteplot <- coverplot %>% filter(Group == "BRTE")
+########################################
+#filtering for just cheatgrass, snowbrush, and rabbitbrush####
+vegplot <- coverplot %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
 
-brteyr <- coveryr %>% filter(Group == "BRTE")
+vegstand <- coverstand %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
 
-brtestudy <- coverstudy %>% filter(Group == "BRTE")
+vegyr <- coveryr %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
 
 
