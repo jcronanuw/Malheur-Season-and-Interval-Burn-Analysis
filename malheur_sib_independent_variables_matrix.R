@@ -94,16 +94,20 @@ for (i in 1:length(canopy_year$file_name_year))
 #Ground cover
 
 #Remove exclosure data
-in_names <- ground_year$file_name
-out_names <- vector()
+
+#Object containing original ground cover file names
+names_orig <- ground_year$file_name
+
+#Object to hold outgoing object names - you will need this for next action.
+names_v1 <- vector()
 removals <- vector()
 for (i in 1:length(in_names))#only years 2002, 2003, and 2004 have exclosures
 {
-  obj <- get(in_names[i])
+  obj <- get(names_orig[i])
   temp <- obj[!obj$Plot %in% plot_lut$Plot[plot_lut$Exclosure == 1],]
-  out_names[i] <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
-  assign(out_names[i], temp)
-  removals[i] <- paste("Note - For", in_names[i], 
+  names_v1[i] <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
+  assign(names_v1[i], temp)
+  removals[i] <- paste("Note - For", names_orig[i], 
                        ":", length(obj$Plot) - length(temp$Plot), 
                        "samples exclosure samples were removed.")
   rm(obj, temp)
@@ -114,21 +118,34 @@ removals
 # 3. Aggregate cover data
 #---------------------------------------------------------------------------------------------
 
-out_names_2 <- vector()
-removals <- vector()
+#List of new column headings for cover types.
+replacements <- sort(unique(ctct$new_name))
 
-for (i in 1:length(out_names))#only years 2002, 2003, and 2004 have exclosures
-{
-  obj <- get(out_names[i])
-  temp <- obj[!obj$Plot %in% plot_lut$Plot[plot_lut$Exclosure == 1],]
-  out_name <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
-  assign(out_name, temp)
-  removals[i] <- paste("Note - For", in_names[i], 
-                       ":", length(obj$Plot) - length(temp$Plot), 
-                       "samples exclosure samples were removed.")
-  rm(obj, out_name, temp)
-}
-removals
+#Object to hold outgoing object names - you will need this for next action.
+names_v2 <- vector()
+
+for(a in 1:length(ground_year$file_name_year)
+    {
+      a <- 1
+      obj <- get(names_v1[a])
+      g2002_2 <- g2002_1
+      for(i in 1:length(replacements))
+        {
+        old_names <- ctct$Column_heading[which(ctct$cats_2002 == "Y" & ctct$new_name == replacements[i])]
+        new_names <- rep(replacements[i],length(old_names))
+        match_names_1 <- new_names[match(names(g2002_2), old_names)]
+        match_names_2 <- match_names_1[!is.na(match_names_1)]
+        names(g2002_2)[names(g2002_2) %in% old_names] <- match_names_2
+        rm(old_names, new_names, match_names_1, match_names_2)
+        }
+      out_name <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
+      assign(out_name, temp)
+      }
+
+
+head(g2002_1)
+head(g2002_2)
+
 
 
 #---------------------------------------------------------------------------------------------
