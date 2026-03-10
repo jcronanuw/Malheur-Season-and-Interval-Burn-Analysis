@@ -63,3 +63,13 @@ odepth12 <- odepth12[!is.na(odepth12$O_Depth), ]
 odepth15 <- odepth15[!is.na(odepth15$O_Depth), ]
 odepth25 <- odepth25[!is.na(odepth25$Depth), ]
 
+
+#assigning treatment to every dataframe####
+odepth02 <- 
+odepth03
+odepth04
+odepth07
+odepth09
+odepth12
+odepth15
+odepth25
