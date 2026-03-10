@@ -9,6 +9,7 @@ library(tidyverse)
 #set input & output folders to import data####
 ##dataframe folders
 input <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Invasives"
+output <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Vegetation"
 
 #importing data
 cover02 <- read.csv(paste0(input, "/Cover_2002.csv"))
@@ -473,10 +474,24 @@ coverstudy <- coveryr %>% group_by(Yr, Exotic, Group) %>%
 
 ########################################
 #filtering for just cheatgrass, snowbrush, and rabbitbrush####
-vegplot <- coverplot %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
+vegquad <- cover %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
+##renaming Cover1 to Cover and Group to Species
+vegquad <- vegquad %>% rename(Cover = Cover1)
+vegquad <- vegquad %>% rename(Species = Group)
 
-vegstand <- coverstand %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
+
+vegplot <- coverplot %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
+##renaming Group to Species
+vegplot <- vegplot %>% rename(Species = Group)
+
 
 vegyr <- coveryr %>% filter(Group == "BRTE" | Group == "CEVE" | Group == "RABBIT")
+##renaming Group to Species
+vegyr <- vegyr %>% rename(Species = Group)
 
+
+#exporting####
+write.csv(vegquad, paste0(output, "/Vegetation_quad.csv"))
+write.csv(vegplot, paste0(output, "/Vegetation_plot.csv"))
+write.csv(vegyr, paste0(output, "/Vegetation_year.csv"))
 
