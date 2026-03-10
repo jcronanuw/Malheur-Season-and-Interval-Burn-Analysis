@@ -9,6 +9,7 @@ library(tidyverse)
 #set input & output folders to import data####
 ##dataframe folders
 input <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Fuels"
+output <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Fuels"
 
 #importing data
 fine25 <- read.csv(paste0(input, "/2025_fuels_1_10_100_hr.csv"))
@@ -153,12 +154,29 @@ fuels25 <- fuels25 %>% mutate(Stand = case_when(
 fuelsKW <- fuelsKW %>% rename(Year = year)
 fuelsKW <- fuelsKW %>% rename(Direction = azimuth)
 
+#removing Driveway 17
+fuelsKW <- fuelsKW %>% filter(!Stand == "D17")
+
+#assigning treatment
+fuelsKW <- fuelsKW %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
 
 
-#checking if fuelsKW and fuels25 have the same plots
-anti_join(fuelsKW %>% distinct(Plot),
-          fuels25 %>% distinct(Plot),
-          by = "Plot")
+#################################################
+#joining the Westlind and Kerns fuels with 2025 fuels####
+#transect direction level
+fuels <- rbind(fuelsKW, fuels25)
 
-#assigning treatment based off fuels25
-fuelsKW <- fuelsKW %>% left_join(fuels25 %>% select(Plot, Treatment), by = "Plot")
+#averaging to the plot level
+fuelsPlot <- fuels %>% group_by(Year, Treatment, Stand, Plot) %>%
+  summarise(hrone = mean(hrone, na.rm = TRUE),
+            hrten = mean(hrten, na.rm = TRUE),
+            hrhun = mean(hrhun, na.rm = TRUE),
+            hrthou = mean(hrthou, na.rm = TRUE)) %>%
+  ungroup()
+
+
+#exporting####
+write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
+write.csv(fuelsPlot, paste0(output, "/Fuels_plot.csv"))
+
+
