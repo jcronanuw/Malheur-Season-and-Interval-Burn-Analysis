@@ -23,7 +23,7 @@ odepth25 <- read.csv(paste0(input, "/ODepth_2025.csv"))
 treatments <- read.csv(paste0(input, "/Plot_treatments.csv"))
 
 #removing unnecessary columns
-odepth02 <- odepth02[, -c(2, 3)]
+odepth02 <- odepth02[, -c(2, 3, 5)]
 odepth03 <- odepth03[, -c(2, 3, 5, 8)]
 odepth04 <- odepth04[, -c(2, 3, 5, 8)]
 odepth07 <- odepth07[, -c(6)]
@@ -63,9 +63,63 @@ odepth12 <- odepth12[!is.na(odepth12$O_Depth), ]
 odepth15 <- odepth15[!is.na(odepth15$O_Depth), ]
 odepth25 <- odepth25[!is.na(odepth25$Depth), ]
 
+#defining column types
+odepth02 <- odepth02 %>% mutate(Plot = as.character(Plot))
+odepth03 <- odepth03 %>% mutate(Plot = as.character(Plot))
+odepth04 <- odepth04 %>% mutate(Plot = as.character(Plot))
+odepth07 <- odepth07 %>% mutate(Plot = as.character(Plot))
+odepth09 <- odepth09 %>% mutate(Plot = as.character(Plot))
+odepth12 <- odepth12 %>% mutate(Plot = as.character(Plot))
+odepth15 <- odepth15 %>% mutate(Plot = as.character(Plot))
+odepth25 <- odepth25 %>% mutate(Plot = as.character(Plot))
+
 
 #assigning treatment to every dataframe####
-odepth02 <- 
+odepth02 <- odepth02 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth03 <- odepth03 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth04 <- odepth04 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth07 <- odepth07 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth09 <- odepth09 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth12 <- odepth12 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth15 <- odepth15 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+
+#adding year to each dataframe pre 2025
+odepth02 <- odepth02 %>% mutate(Year = "2002")
+odepth03 <- odepth03 %>% mutate(Year = "2003") 
+odepth04 <- odepth04 %>% mutate(Year = "2004")
+odepth07 <- odepth07 %>% mutate(Year = "2007")
+odepth09 <- odepth09 %>% mutate(Year = "2009")
+odepth12 <- odepth12 %>% mutate(Year = "2012")
+odepth15 <- odepth15 %>% mutate(Year = "2015")
+
+#changing treatment in 2025 to match previous years
+odepth25 <- odepth25 %>% mutate(Stand = case_when(
+  (Stand == "Driveway 14") ~ "D14",
+  (Stand == "Driveway 26") ~ "D26",
+  (Stand == "Driveway 28") ~ "D28",
+  (Stand == "Kidd Flat") ~ "KF",
+  (Stand == "Trout") ~ "Trout"))
+
+#changing quadrat in 2025 to match previous years
+odepth25 <- odepth25 %>% mutate(Quadrat = case_when(
+  (Quadrat == "N2") ~ "N",
+  (Quadrat == "E2") ~ "E",
+  (Quadrat == "S2") ~ "S",
+  (Quadrat == "W2") ~ "W"))
+
+#renaming "Quadrat" column to "Quad"
+odepth25 <- odepth25 %>% rename(Quad = Quadrat)
+
+
+#joining all the dataframes together
+odepth <- rbind(odepth02, odepth03, odepth04, odepth07, odepth09, odepth12, odepth15, odepth25)
+
+
+
+
+
+
+odepth02
 odepth03
 odepth04
 odepth07
