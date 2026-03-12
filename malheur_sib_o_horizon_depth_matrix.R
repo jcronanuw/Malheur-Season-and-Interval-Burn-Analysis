@@ -71,17 +71,18 @@ odepth07 <- odepth07 %>% mutate(Plot = as.character(Plot))
 odepth09 <- odepth09 %>% mutate(Plot = as.character(Plot))
 odepth12 <- odepth12 %>% mutate(Plot = as.character(Plot))
 odepth15 <- odepth15 %>% mutate(Plot = as.character(Plot))
-odepth25 <- odepth25 %>% mutate(Plot = as.character(Plot))
+odepth25 <- odepth25 %>% mutate(Plot = as.character(Plot),
+                                Year = as.character(Year))
 
 
 #assigning treatment to every dataframe####
 odepth02 <- odepth02 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
 odepth03 <- odepth03 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
 odepth04 <- odepth04 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
-odepth07 <- odepth07 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
-odepth09 <- odepth09 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
-odepth12 <- odepth12 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
-odepth15 <- odepth15 %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
+odepth07 <- odepth07 %>% left_join(treatments, by = "Plot")
+odepth09 <- odepth09 %>% left_join(treatments, by = "Plot")
+odepth12 <- odepth12 %>% left_join(treatments, by = "Plot")
+odepth15 <- odepth15 %>% left_join(treatments, by = "Plot")
 
 #adding year to each dataframe pre 2025
 odepth02 <- odepth02 %>% mutate(Year = "2002")
@@ -107,23 +108,31 @@ odepth25 <- odepth25 %>% mutate(Quadrat = case_when(
   (Quadrat == "S2") ~ "S",
   (Quadrat == "W2") ~ "W"))
 
-#renaming "Quadrat" column to "Quad"
-odepth25 <- odepth25 %>% rename(Quad = Quadrat)
+#renaming "Quadrat" column to "Quad" and "Depth" to "O_Depth"
+odepth25 <- odepth25 %>% rename(Quad = Quadrat,
+                                O_Depth = Depth)
 
 
-#joining all the dataframes together
-odepth <- rbind(odepth02, odepth03, odepth04, odepth07, odepth09, odepth12, odepth15, odepth25)
+#joining all the dataframes together####
+odepthQuad <- rbind(odepth02, odepth03, odepth04, odepth07, odepth09, odepth12, odepth15, odepth25)
+
+#summarizing to the plot level and then the year/treatment level
+odepthPlot <- odepthQuad %>% group_by(Year, Stand, Treatment, Plot) %>%
+  summarise(O_Depth1 = mean(O_Depth, na.rm = TRUE), .groups = 'drop')
+##changing O_Depth1 to O_Depth
+odepthPlot <- odepthPlot %>% rename(O_Depth = O_Depth1)
 
 
+odepthYear <- odepthPlot %>% group_by(Year, Treatment) %>%
+  summarise(O_Depth1 = mean(O_Depth, na.rm = TRUE),
+            sd_o_depth = sd(O_Depth1, na.rm = TRUE)) %>%
+  ungroup()
+##changing O_Depth1 to O_Depth
+odepthYear <- odepthYear %>% rename(O_Depth = O_Depth1)
 
 
+#exporting####
+write.csv(odepthQuad, paste0(output, "/ODepth_quad.csv"))
+write.csv(odepthPlot, paste0(output, "/ODepth_plot.csv"))
+write.csv(odepthYear, paste0(output, "/ODepth_year.csv"))
 
-
-odepth02
-odepth03
-odepth04
-odepth07
-odepth09
-odepth12
-odepth15
-odepth25
