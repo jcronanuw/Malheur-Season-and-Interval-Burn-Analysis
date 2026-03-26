@@ -81,41 +81,57 @@ for (i in 1:length(canopy_year$file_name_year))
   rm(object_name, temp)
 }
 
-
-#---------------------------------------------------------------------------------------------
-# 2. Data structure
-#---------------------------------------------------------------------------------------------
-
-
 #---------------------------------------------------------------------------------------------
 # 2. Remove exclosure data
-#---------------------------------------------------------------------------------------------
 
+#####WARNING
+### I only removed exclosure plots for 2002, 2003, and 2004.
+
+#---------------------------------------------------------------------------------------------
 #Ground cover
 
 #Remove exclosure data
 
-#Object containing original ground cover file names
-names_orig <- ground_year$file_name
-
 #Object to hold outgoing object names - you will need this for next action.
-names_v1 <- vector()
+names_v1a <- vector()
 removals <- vector()
-for (i in 1:length(in_names))#only years 2002, 2003, and 2004 have exclosures
+#Subset first three files (2002, 2003, 2004.).
+in_names_1a <- ground_year$file_name[ground_year$exclosures_YN == "Y"]
+#No other years have exclosures.
+for (i in 1:length(in_names_1a))#only years 2002, 2003, and 2004 have exclosures
 {
-  obj <- get(names_orig[i])
+  obj <- get(in_names_1a[i])
   temp <- obj[!obj$Plot %in% plot_lut$Plot[plot_lut$Exclosure == 1],]
-  names_v1[i] <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
-  assign(names_v1[i], temp)
-  removals[i] <- paste("Note - For", names_orig[i], 
+  names_v1a[i] <- paste(in_names_1a[i], "_1", sep = "") 
+  assign(names_v1a[i], temp)
+  removals[i] <- paste("Note - For", in_names_1a[i], 
                        ":", length(obj$Plot) - length(temp$Plot), 
                        "samples exclosure samples were removed.")
   rm(obj, temp)
 }
 removals
 
+#Update all files to the same version name
+#Object to hold outgoing object names - you will need this for next action.
+names_v1b <- vector()
+
+#Subset first three files (2002, 2003, 2004.).
+in_names_1b <- ground_year$file_name[ground_year$exclosures_YN == "N"]
+#No other years have exclosures.
+for (i in 1:length(in_names_1b))#only years 2002, 2003, and 2004 have exclosures
+{
+  obj <- get(in_names_1b[i])
+  names_v1b[i] <- paste(in_names_1b[i], "_1", sep = "") 
+  assign(names_v1b[i], obj)
+  rm(obj)
+}
+
+objects()
+names_v1 <- c(names_v1a, names_v1b)
+names_v1
+
 #---------------------------------------------------------------------------------------------
-# 3. Aggregate cover data
+# 3. Create uniform cover data categories
 #---------------------------------------------------------------------------------------------
 
 #List of new column headings for cover types.
@@ -123,57 +139,68 @@ replacements <- sort(unique(ctct$new_name))
 
 #Object to hold outgoing object names - you will need this for next action.
 names_v2 <- vector()
+names_check <- list()
 
-for(a in 1:length(ground_year$file_name_year)
+for(a in 1:length(ground_year$file_name_year))
     {
-      a <- 1
       obj <- get(names_v1[a])
-      g2002_2 <- g2002_1
+      cn <-  paste("cats_", ground_year$file_name_year[a], sep = "") 
       for(i in 1:length(replacements))
         {
-        old_names <- ctct$Column_heading[which(ctct$cats_2002 == "Y" & ctct$new_name == replacements[i])]
+        old_names <- ctct$Column_heading[which(ctct[,cn] == "Y" & 
+                                               ctct$new_name == replacements[i])]
         new_names <- rep(replacements[i],length(old_names))
-        match_names_1 <- new_names[match(names(g2002_2), old_names)]
+        match_names_1 <- new_names[match(names(obj), old_names)]
         match_names_2 <- match_names_1[!is.na(match_names_1)]
-        names(g2002_2)[names(g2002_2) %in% old_names] <- match_names_2
+        names(obj)[names(obj) %in% old_names] <- match_names_2
         rm(old_names, new_names, match_names_1, match_names_2)
         }
-      out_name <- paste("g", ground_year$file_name_year[i], "_1", sep = "") 
-      assign(out_name, temp)
+      names_v2[a] <- paste("g", ground_year$file_name_year[a], "_2", sep = "") 
+      assign(names_v2[a], obj)
+      names_check[[a]] <- unique(colnames(obj))
+      rm(obj, cn)
       }
 
+#---------------------------------------------------------------------------------------------
+# 4. Sum cover data for each year
+#---------------------------------------------------------------------------------------------
 
-head(g2002_1)
-head(g2002_2)
+#Object to hold outgoing object names - you will need this for next action.
+names_v3 <- vector()
 
+for(a in 1:length(ground_year$file_name_year))
+{
+  obj <- get(names_v2[a])
+  out_file <- data.frame(
+    litter = rep(0,length(obj[,1])), 
+    mineral = rep(0,length(obj[,1])), 
+    moss = rep(0,length(obj[,1])), 
+    other = rep(0,length(obj[,1]))
+  )
+  for(i in 1:length(replacements))
+  {
+    obj_cvr <- obj[,colnames(obj) == replacements[i]]
+    obj_cvr <- as.matrix(obj_cvr)
+    out_file[,i] <- apply(obj_cvr,1,sum, na.rm = T)
+    rm(obj_cvr)
+  }
+  out_file_append <- data.frame(
+    Plot = obj$Plot, 
+    Quad = obj$Quad, 
+    out_file)
+  names_v3[a] <- paste("g", ground_year$file_name_year[a], "_3", sep = "") 
+  assign(names_v3[a], out_file_append)
+  rm(obj, out_file, out_file_append)
+}
+
+#---------------------------------------------------------------------------------------------
+# 5. Combine files into a single object
+#---------------------------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------------------------
-# 2. Merge datasets
+# 5. Orient vertically
 #---------------------------------------------------------------------------------------------
-
-#Merge 2002 and 2003 data
-m1 <- merge(g2002, g2003, by = c("Plot", "Quad"))
-
-#Make sure matching columns are the same
-check_Stand <- match(m1$Stand.x, m1$Stand.y)
-any(is.na(check_Stand) == T)
-check_SOB <- match(m1$SOB.x, m1$SOB.y)
-any(is.na(check_SOB) == T)
-check_Exc <- match(m1$Exc.x, m1$Exc.y)
-any(is.na(check_Exc) == T)
-check_Date <- match(m1$Date.x, m1$Date.y)
-any(is.na(check_Date) == T)
-
-
-#If true there is a mismatch
-
-#Make sure the SOBs are the same
-check_SOB <- match(m1$SOB.x, m1$SOB.y)
-any(is.na(check_SOB) == T)
-#If true there is a mismatch
-
-
 
 
 #---------------------------------------------------------------------------------------------
