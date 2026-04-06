@@ -162,7 +162,7 @@ vegQuad %>% filter(Species == "CEVE") %>% group_by(Yr) %>%
             sdCover = sd(Cover, na.rm = TRUE),
             n = n())
 
-##cheatgrass
+##rabbitbrush
 vegQuad %>% filter(Species == "RABBIT") %>% group_by(Yr) %>%
   summarise(meanCover = mean(Cover, na.rm = TRUE),
             medianCover = median(Cover, na.rm = TRUE),
@@ -227,3 +227,33 @@ shrubPlot %>% filter(Code == "RABBIT") %>% group_by(Year) %>%
     geom_histogram(bins = 30) +
     facet_wrap(~Year) +
     theme_bw())
+
+
+###############################
+#tests####
+##vegetation quads (3 species per quad, 8 quads per plot, 3 plots per treatment (6 for control), and 14 per stand (13 for Trout))
+###checking that every quadrat has 3 species
+vegSpCheck <- vegQuad %>% group_by(Yr, Stand, Treatment, Plot, Quad) %>%
+  summarise(n_Species = n_distinct(Species), .groups = 'drop')
+
+###checking that every year has 89 plots, 5 stands, and 5 treatments
+vegYrCheck <- vegQuad %>% group_by(Yr) %>%
+  summarise(n_Plots = n_distinct(Plot),
+            n_Treatment = n_distinct(Treatment),
+            n_Stand = n_distinct(Stand), .groups = 'drop')
+
+vegQuadCheck <- vegQuad %>% group_by(Yr, Plot) %>%
+  summarise(n_Quad = n_distinct(Quad), .groups = 'drop')
+
+vegStandCheck <- vegQuad %>% group_by(Yr) %>%
+  summarise(n_Stand = n_distinct(Stand), .groups = 'drop')
+
+vegTreatmentCheck <- vegQuad %>% group_by(Yr) %>%
+  summarise(n_Treat = n_distinct(Treatment), .groups = 'drop')
+
+###making sure every plot has 8 quadrats
+vegQuadCheck <- vegQuad %>% group_by(Yr, Stand, Treatment, Plot) %>%
+  summarise(n_Quads = n_distinct(Quad), .groups = 'drop')
+
+###making sure the unique combination of year, stand, treatment, plot, quadrat, and species exists
+
