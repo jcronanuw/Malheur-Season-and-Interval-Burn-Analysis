@@ -13,7 +13,7 @@ library(tidyverse) #needed for pipe function (%>%)
 # 1. Load data
 #---------------------------------------------------------------------------------------------
 
-#Data
+#Incoming data
 # Map usernames to file paths
 user_paths_canopy <- c(
   Nat   = "",
@@ -32,7 +32,7 @@ user_paths_lut <- c(
   esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/lut_burn_severity_file_names.csv",
   mak600 = "C://Users//mak600//Documents//Malheur//Canopy Data//canopy_file_lut.csv")
 
-# Map usernames to file paths
+# Outgoing (saved) data
 user_paths_saved_data <- c(
   Nat   = "",
   Becky = "",
@@ -169,11 +169,6 @@ c2015_standard <- canopy_list$c2015 %>%
   select(-"Date")
 c2015_standard_df <- as.data.frame(c2015_standard)  
 
-#Convert Comment column to character
-c2002_standard <- c2002_standard_1 %>% 
-  mutate(Comment = as.character(Comment))
-
-
 #2025
 #convert to long format and calculate percent canopy cover
 c2025_standard <- canopy_list$c2025 %>%
@@ -229,10 +224,6 @@ canopy_combined_2 <-
 #write a function to visualize plot, position, and percent cover
 #frequencies that can be applied to any year and be used to check
 #for outliers and typos
-
-data <- canopy_combined_2
-year_input <- 2007
-
 
 canopy_hist <- function(data, year_input) {
   
@@ -450,6 +441,41 @@ cc3$percent_canopy_cover <- round(cc3$percent_canopy_cover,0)
 #A number of rows
 cc3$percent_canopy_cover <- round(cc3$percent_canopy_cover,0)
 
+##################################################################################
+#5
+#Not all positions are labelled consistently
+sort(unique(cc3$Position))
+
+#Change 'Central' to 'C'
+cc3$Position[cc3$Position == "Center"] <- "C"
+
+#Change 'E15' to 'E_15'
+cc3$Position[cc3$Position == "E15"] <- "E_15"
+
+#Change 'E5' to 'E_5'
+cc3$Position[cc3$Position == "E5"] <- "E_5"
+
+#Change 'N15' to 'N_15'
+cc3$Position[cc3$Position == "N15"] <- "N_15"
+
+#Change 'N5' to 'N_5'
+cc3$Position[cc3$Position == "N5"] <- "N_5"
+
+#Change 'S15' to 'S_15'
+cc3$Position[cc3$Position == "S15"] <- "S_15"
+
+#Change 'S5' to 'S_5'
+cc3$Position[cc3$Position == "S5"] <- "S_5"
+
+#Change 'W15' to 'W_15'
+cc3$Position[cc3$Position == "W15"] <- "W_15"
+
+#Change 'W5' to 'W_5'
+cc3$Position[cc3$Position == "W5"] <- "W_5"
+
+#Recheck positions
+sort(unique(cc3$Position))
+
 
 #-------------------------------------------------------------------------------------
 # 6. Save corrected data
@@ -459,6 +485,11 @@ cc3$percent_canopy_cover <- round(cc3$percent_canopy_cover,0)
 
 #Set working directory to clean data folder.
 setwd(paste(user_paths_saved_data[current_user], sep = ""))
+
+getwd()
+
+setwd(paste("C:/Users/jcronan/Desktop", sep = ""))
+
 
 #Set date and time.
 dt <- Sys.Date()
