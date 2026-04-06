@@ -16,7 +16,7 @@ library(tidyverse) #needed for pipe function (%>%)
 #Incoming data
 # Map usernames to file paths
 user_paths_canopy <- c(
-  Nat   = "",
+  Nate   = "C:/Users/NathanWade/Box/SIB/Cronan/Wade/3_Data/01_Raw_Data/Severity_indices/Canopy",
   Becky = "",
   jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy",
   esande02 = "",
@@ -26,7 +26,7 @@ user_paths_canopy <- c(
 #Lookup Tables
 # Map usernames to file paths
 user_paths_lut <- c(
-  Nat   = "",
+  Nate   = "C:/Users/NathanWade/Box/SIB/Cronan/Wade/3_Data/01_Raw_Data/Severity_indices/Canopy/",
   Becky     = "",
   jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy/",
   esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/lut_burn_severity_file_names.csv",
@@ -34,7 +34,7 @@ user_paths_lut <- c(
 
 # Outgoing (saved) data
 user_paths_saved_data <- c(
-  Nat   = "",
+  Nate   = "C:/Users/NathanWade/Box/SIB/Cronan/Wade/3_Data/02_Clean_Data/Severity_indices/Canopy/",
   Becky = "",
   jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Severity_indices/Canopy",
   esande02 = "",
