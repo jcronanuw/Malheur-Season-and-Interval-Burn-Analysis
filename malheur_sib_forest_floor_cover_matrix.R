@@ -53,7 +53,7 @@ ground_year <- read.csv(paste(user_paths_ground[current_user],
                               "lut_ground_file_names.csv", sep = ""))
 #Cover type crosswalk table
 ctct <- read.csv(paste(user_paths_ground[current_user], 
-                              "data_dictionary.csv", sep = ""))
+                       "data_dictionary.csv", sep = ""))
 
 #Ground cover data.
 for (i in 1:length(ground_year$file_name_year))
@@ -142,24 +142,24 @@ names_v2 <- vector()
 names_check <- list()
 
 for(a in 1:length(ground_year$file_name_year))
-    {
-      obj <- get(names_v1[a])
-      cn <-  paste("cats_", ground_year$file_name_year[a], sep = "") 
-      for(i in 1:length(replacements))
-        {
-        old_names <- ctct$Column_heading[which(ctct[,cn] == "Y" & 
-                                               ctct$new_name == replacements[i])]
-        new_names <- rep(replacements[i],length(old_names))
-        match_names_1 <- new_names[match(names(obj), old_names)]
-        match_names_2 <- match_names_1[!is.na(match_names_1)]
-        names(obj)[names(obj) %in% old_names] <- match_names_2
-        rm(old_names, new_names, match_names_1, match_names_2)
-        }
-      names_v2[a] <- paste("g", ground_year$file_name_year[a], "_2", sep = "") 
-      assign(names_v2[a], obj)
-      names_check[[a]] <- unique(colnames(obj))
-      rm(obj, cn)
-      }
+{
+  obj <- get(names_v1[a])
+  cn <-  paste("cats_", ground_year$file_name_year[a], sep = "") 
+  for(i in 1:length(replacements))
+  {
+    old_names <- ctct$Column_heading[which(ctct[,cn] == "Y" & 
+                                             ctct$new_name == replacements[i])]
+    new_names <- rep(replacements[i],length(old_names))
+    match_names_1 <- new_names[match(names(obj), old_names)]
+    match_names_2 <- match_names_1[!is.na(match_names_1)]
+    names(obj)[names(obj) %in% old_names] <- match_names_2
+    rm(old_names, new_names, match_names_1, match_names_2)
+  }
+  names_v2[a] <- paste("g", ground_year$file_name_year[a], "_2", sep = "") 
+  assign(names_v2[a], obj)
+  names_check[[a]] <- unique(colnames(obj))
+  rm(obj, cn)
+}
 
 #---------------------------------------------------------------------------------------------
 # 4. Sum cover data for each year

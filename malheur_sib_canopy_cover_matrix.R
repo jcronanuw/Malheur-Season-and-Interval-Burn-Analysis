@@ -168,6 +168,7 @@ c2015_standard <- canopy_list$c2015 %>%
   mutate(year = "2015") %>%
   select(-"Date")
 c2015_standard_df <- as.data.frame(c2015_standard)  
+c2015_standard_df$Comment[is.na(c2015_standard_df$Comment)] <- ""
 
 #2025
 #convert to long format and calculate percent canopy cover
@@ -207,6 +208,11 @@ canopy_combined_1 <-
        "propCC",
        "canopy_cover",
        "Initials"))
+
+#Remove "NA_NA", "_NA", and "NA_" assignments in notes for blank entries.
+canopy_combined_1$`comments/notes`[canopy_combined_1$`comments/notes` == "NA_NA"] <- ""
+canopy_combined_1$`comments/notes`[canopy_combined_1$`comments/notes` == "_NA"] <- ""
+canopy_combined_1$`comments/notes`[canopy_combined_1$`comments/notes` == "NA_"] <- ""
 
 #Remove exclosure plots
 #Remove all plots that start with 98 and are at least four characters/digits long.
@@ -485,11 +491,6 @@ sort(unique(cc3$Position))
 
 #Set working directory to clean data folder.
 setwd(paste(user_paths_saved_data[current_user], sep = ""))
-
-getwd()
-
-setwd(paste("C:/Users/jcronan/Desktop", sep = ""))
-
 
 #Set date and time.
 dt <- Sys.Date()
