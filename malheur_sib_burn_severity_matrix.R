@@ -8,7 +8,9 @@
 #Load libraries
 library(dplyr)#graphics
 library(ggplot2)#graphics
-library(readr)#read.csv() {utils}.
+library(readr)#??? - read.csv() {utils}.
+library(gridExtra) #to display multiple histograms at once -- grid.arrange()
+library(tidyverse) #needed for pipe function (%>%)
 
 #---------------------------------------------------------------------------------------------
 # 1. Load data
@@ -19,7 +21,7 @@ library(readr)#read.csv() {utils}.
 user_paths_burn <- c(
   Nat   = "",
   Becky = "",
-  jcronan = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Fire_severity/",
   esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/",
   margaretkoontz = ""
 )
@@ -29,10 +31,21 @@ user_paths_burn <- c(
 user_paths_lut <- c(
   Nat   = "",
   Becky     = "",
-  jcronan = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Fire_severity/",
   esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/lut_burn_severity_file_names.csv",
   margaretkoontz = ""
 )
+
+
+# Outgoing (saved) data
+user_paths_saved_data <- c(
+  Nate   = "",
+  Becky = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Severity_indices/Fire_severity/",
+  esande02 = "",
+  mak600 = ""
+)
+
 
 # Detect current user
 current_user <- Sys.info()[["user"]]
@@ -50,16 +63,16 @@ if (!current_user %in% names(user_paths_lut)) {
 
 #Load data
 #Load lut
-burn_year <- read.csv(paste(user_paths_lut[current_user]))
+burn_year <- c(2003, 2008, 2012)
 
 #Burn severity data
-for (i in seq_along(burn_year$file_name_year))
+for (i in 1:length(burn_year))
 {
-  object_name <- paste("b", burn_year$file_name_year[i], sep = "")
+  object_name <- paste("b", burn_year[i], sep = "")
   
   temp <- read.csv(paste(user_paths_burn[current_user],
                          "Plot_severity_",
-                         burn_year$file_name_year[i],
+                         burn_year[i],
                          ".csv",
                          sep = ""))
   
