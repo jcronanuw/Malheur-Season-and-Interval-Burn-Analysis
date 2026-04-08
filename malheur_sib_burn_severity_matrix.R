@@ -1,5 +1,5 @@
 #############################################################################################
-# Independent Variables Matrix
+# Fire severity Matrix
 # Author: Jim Cronan, Emily Sanders, Maggie Koontz
 # Purpose: Collate and format raw data containing independent variables on burn severity
 #into a single matrix with variables arranged in columns and sites arranged in rows.
@@ -93,8 +93,36 @@ b2012$Year <- 2012
 #---------------------------------------------------------------------------------------------
 # 3. Merge datasets
 #---------------------------------------------------------------------------------------------
+fsc_1 <- bind_rows(b2003, b2008, b2012)
 
-test_mat <- bind_rows(b2003, b2008, b2012)
-View(test_mat)
+
+#Remove exclosure plots
+fsc_2 <- 
+  fsc_1 %>% 
+  filter(
+    !grepl("^98\\d{2}$", as.character(Plot)),
+  )
+
+
+
+#-------------------------------------------------------------------------------------
+# 4. Save corrected data
+#---------------------------------------------------------------------------------------------
+#This is corrected data.
+#No data has been removed.
+
+#Set working directory to clean data folder.
+setwd(paste(user_paths_saved_data[current_user], sep = ""))
+
+#Set date and time.
+dt <- Sys.Date()
+clean_dt <- gsub("-", "", dt, fixed = T)
+
+write_csv(fsc_2, paste(clean_dt, "_burn_severity_fire_clean.csv", sep = ""))
+
+#---------------------------------------------------------------------------------------------
+# End
+#---------------------------------------------------------------------------------------------
+
 
 
