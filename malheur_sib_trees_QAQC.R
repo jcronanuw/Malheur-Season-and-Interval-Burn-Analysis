@@ -19,17 +19,9 @@ library(tidyverse)
 #Data
 #SIB Trees Data 
 user_paths_data <- c(
-  esande02 = 
-  mak600 = 
-  jcronan = 
-)
-
-#Lookup Tables
-# Map usernames to file paths
-user_paths_lut <- c(
-  esande02 = 
-  mak600  = 
-  jcronan =
+  esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/SIB_trees/",
+  mak600 = "",
+  jcronan = ""
 )
 
 #Detect current user
@@ -40,24 +32,22 @@ if (!current_user %in% names(user_paths_data)) {
   stop("No file path configured for this user: ", current_user)
 }
 
-# Check if user exists in mapping for lut files
-if (!current_user %in% names(user_paths_lut)) {
-  stop("No file path configured for this user: ", current_user)
-}
-
 # Load data
-dim <- read_excel(paste(user_paths_data[current_user], 
-                      "",
+trees <- read_excel(paste(user_paths_data[current_user], 
+                      "SIB_trees.xlsx",
                         sep = ""))
 
-cw <- read_excel(paste(user_paths_data[current_user], 
-                      "",
-                       sep = ""))
-# Load LUTs
-plot_lut <- read_excel(paste(user_paths_lut[current_user], 
-                            "",
-                             sep = ""))
+#---------------------------------------------------------------------------------------------
+# 2. Basic structure
+#---------------------------------------------------------------------------------------------
 
-species_lut <- read.csv(paste(user_paths_lut[current_user], 
-                             "",
-                              sep = ""))
+#Look at structure of data
+
+#---------------------------------------------------------------------------------------------
+# 3. Numeric Check
+#---------------------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------------------
+# 3. Categorical Check
+#---------------------------------------------------------------------------------------------
+
