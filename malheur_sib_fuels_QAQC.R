@@ -19,17 +19,9 @@ library(tidyverse)
 #Data
 #SIB Fuels Data
 user_paths_data <- c(
-  esande02 = 
-  mak600 = 
-  jcronan =
-)
-
-#Lookup Tables
-# Map usernames to file paths
-user_paths_lut <- c(
-  esande02 = 
-  mak600 = 
-  jcronan =
+  esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/SIB_fuels/",
+  mak600 = "",
+  jcronan = ""
 )
 
 #Detect current user
@@ -40,24 +32,66 @@ if (!current_user %in% names(user_paths_data)) {
   stop("No file path configured for this user: ", current_user)
 }
 
-# Check if user exists in mapping for lut files
-if (!current_user %in% names(user_paths_lut)) {
-  stop("No file path configured for this user: ", current_user)
-}
-
 # Load data
-dim <- read_excel(paste(user_paths_data[current_user], 
-                       "",
+hr100 <- read_excel(paste(user_paths_data[current_user], 
+                      "SIB_fuels_1_10_100_hr.xlsx",
+                       sep = ""))
+
+hr1000 <- read_excel(paste(user_paths_data[current_user], 
+                      "SIB_fuels_1000_hr.xlsx",
+                       sep = ""))
+
+ld <- read_excel(paste(user_paths_data[current_user], 
+                       "SIB_fuels_litter_duff.xlsx",
                         sep = ""))
 
-cw <- read_excel(paste(user_paths_data[current_user], 
-                       "",
-                       sep = ""))
-# Load LUTs
-plot_lut <- read_excel(paste(user_paths_lut[current_user], 
-                             "",
-                             sep = ""))
+#---------------------------------------------------------------------------------------------
+# 2. Basic structure
+#---------------------------------------------------------------------------------------------
 
-species_lut <- read.csv(paste(user_paths_lut[current_user], 
-                              "",
-                              sep = ""))
+#Look at structure of data
+
+#############################
+#1, 10, 100 hour fuels  #####
+#############################
+
+#############################
+#1000 hour fuels        #####
+#############################
+
+#############################
+#Litter and Duff        #####
+#############################
+
+#---------------------------------------------------------------------------------------------
+# 3. Numeric Check
+#---------------------------------------------------------------------------------------------
+
+#############################
+#1, 10, 100 hour fuels  #####
+#############################
+
+#############################
+#1000 hour fuels        #####
+#############################
+
+#############################
+#Litter and Duff        #####
+#############################
+
+#---------------------------------------------------------------------------------------------
+# 3. Categorical Check
+#---------------------------------------------------------------------------------------------
+
+#############################
+#1, 10, 100 hour fuels  #####
+#############################
+
+#############################
+#1000 hour fuels        #####
+#############################
+
+#############################
+#Litter and Duff        #####
+#############################
+
