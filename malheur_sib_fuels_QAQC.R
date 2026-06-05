@@ -344,28 +344,132 @@ ld %>%
 #1, 10, 100 hour fuels  #####
 #############################
 
-# All plots should match those listed on data sheets
-# Each plot should belong to one treatment 
-# All treatments should match those listed on data sheets 
 # All stands should match those listed on data sheets
-# Missing treatments, plots, or stands 
+unique(hr100$Stand)
+#good 
+
+# Each plot should have one treatment 
+hr100 %>%
+  group_by(Stand, Plot) %>%
+  summarize(
+    n_treatments = n_distinct(Treatment),
+    .groups = "drop"
+  ) %>%
+  filter(n_treatments > 1)
+#good 
+
+# All treatments should match those listed on data sheets 
+unique(hr100$Treatment)
+#good 
+
+# All plots should match those listed on data sheets
+unique(hr100$Plot)
+#ok 
+
+# Missing treatments, plots, or stands
+hr100 %>%
+  filter(
+    is.na(Stand) |
+      is.na(Treatment) |
+      is.na(Plot)
+  )
+#good 
 
 #############################
 #1000 hour fuels        #####
 #############################
 
-# Missing spp. codes 
-# Make sure spp. codes are valid
+# Make sure spp. codes are valid (should only be NONE, PIPO, CELE, JUOC, UNK)
+unique(hr1000$Species)
+#There are NA values, should not be there
+
+# Finding NA values:
+hr1000 %>%
+  mutate(Row = row_number(), .before =1) %>%
+  filter(is.na(Species))
+#Row 171 looks like duplicate row in datasheet.
+
+# Checking for other duplicates:
+hr1000 %>%
+  duplicated() %>%
+  which()
+#508 and 564 look like duplicates. Not going to remove in case they are unique
+#1000-hr entries that just happened to have the same diameter/decay class as row 
+#above, need to check with Jim before removing.
+
+#Safe to remove row 171 because there is no other info in that row (spp., 
+#diameter, decay class, etc.):
+hr1000 <- hr1000[-171,]
+
 # Frequency table of spp.
+ggplot(hr1000, aes(x=Species)) +
+  geom_bar(fill = "tomato", color = "black") +
+  labs(title = "1000-Hr Species Distribution",
+       x = "Species Code",
+       y = "Frequency"
+  )
+#Almost entirely PIPO 
+
 # Only Y/N values for Elevated
-# When species = NONE, diameter, decay, elevated should be blank
+hr1000 %>%
+  filter(!Elevated %in% c("Y", "N") & !is.na(Elevated))
+#ok
+
+# When species = NONE, diameter, decay, elevated should all be NA
+hr1000 %>%
+  filter(
+    Species == "NONE" &
+      (!is.na(Diameter) |
+       !is.na(`Decay class`) |
+       !is.na(Elevated)
+      ))
+#good
+
 # Each plot belongs to one treatment 
-# Missing stand, treatment, plot, or direction values
+hr1000 %>%
+  group_by(Stand, Plot) %>%
+  summarize(
+    n_treatments = n_distinct(Treatment),
+    .groups = "drop"
+  ) %>%
+  filter(n_treatments > 1)
+#good 
+
+# Missing stand, treatment, plot values
+hr1000 %>%
+  filter(
+    is.na(Stand) |
+      is.na(Treatment) |
+      is.na(Plot))
+#good
 
 #############################
 #Litter and Duff        #####
 #############################
 
 # Missing values 
+colSums(is.na(ld))
+#good 
+
 # Check validity of spp.
+unique(ld$`6m litter/duff type`)
+#Thinking these names can be combined (but not sure?), waiting on confirmation:
+  #"GRASS" and "GRASS THATCH" -> "GRASS THATCH"
+  #"BARE" and "BARE SOIL" -> "BARE SOIL"
+  #Unsure about "PIPO BARK"
+
+unique(ld$`12m litter/duff type`)
+  #Same as above, plus unsure about "BARK PLATE PIPO", "BARK PIPO", "PIPO BARK",
+  #"BARK FLATES (PIPO)", and "PIPO/WOOD ROT" and whether they can be combined
+  #into already existing litter/duff types
+
+
 # Each plot belongs to one treatment
+ld %>%
+  group_by(Stand, Plot) %>%
+  summarize(
+    n_treatments = n_distinct(Treatment),
+    .groups = "drop"
+  ) %>%
+  filter(n_treatments > 1)
+#ok
