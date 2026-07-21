@@ -171,7 +171,8 @@ fuelsPlot <- fuels %>% group_by(Year, Treatment, Stand, Plot) %>%
   summarise(hrone = mean(hrone, na.rm = TRUE),
             hrten = mean(hrten, na.rm = TRUE),
             hrhun = mean(hrhun, na.rm = TRUE),
-            hrthou = mean(hrthou, na.rm = TRUE)) %>%
+            hrthou = mean(hrthou, na.rm = TRUE),
+            landd = mean(landd, na.rm = TRUE)) %>%
   ungroup()
 
 
