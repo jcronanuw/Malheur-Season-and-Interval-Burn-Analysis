@@ -217,15 +217,24 @@ write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
 write.csv(fuelsPlot, paste0(output, "/Fuels_plot.csv"))
 
 
+#averaging to the IB level####
+fuelssplit <- fuelsPlot %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, SubplotID) %>%
+  summarise(hrone = mean(hrone, na.rm = TRUE),
+            hrten = mean(hrten, na.rm = TRUE),
+            hrhun = mean(hrhun, na.rm = TRUE),
+            hrthou = mean(hrthou, na.rm = TRUE),
+            landd = mean(landd, na.rm = TRUE)) %>%
+  ungroup()
+
+
 #######################################
 #GLMMs####
 #1-hr fuels####
-oneModel <- glmmTMB(hrone ~ Treatment*Year
-                    + (1|Stand/SOB)
-                    + (1|SubplotID/Plot), 
+oneModel <- glmmTMB(hrone ~ Treatment
+                    + (1|Stand/SOB),
                     #ziformula = ~ Treatment,
-                    family = poisson(), 
-                    data = fuelsPlot)
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
 
 
 #Model checks
@@ -239,19 +248,18 @@ summary(oneModel)
 
 
 #Inference and marginal means on the response (proportion) scale
-oneEmm <- emmeans(oneModel, ~ Treatment|Year, type = "response")
+oneEmm <- emmeans(oneModel, ~ Treatment, type = "response")
 summary(oneEmm)             #marginal means and CIs
 pairs(oneEmm)               #treatment contrasts within each year as proportions
 plot(oneEmm)
 
 
 #10-hr fuels####
-tenModel <- glmmTMB(hrten ~ Treatment*Year
-                    + (1|Stand/SOB)
-                    + (1|SubplotID/Plot), 
+tenModel <- glmmTMB(hrten ~ Treatment
+                    + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
-                    data = fuelsPlot)
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
 
 
 #Model checks
@@ -265,19 +273,18 @@ summary(tenModel)
 
 
 #Inference and marginal means on the response (proportion) scale
-tenEmm <- emmeans(tenModel, ~ Treatment|Year, type = "response")
+tenEmm <- emmeans(tenModel, ~ Treatment, type = "response")
 summary(tenEmm)             #marginal means and CIs
 pairs(tenEmm)               #treatment contrasts within each year as proportions
 plot(tenEmm)
 
 
 #100-hr fuels####
-hunModel <- glmmTMB(hrhun ~ Treatment*Year
-                    + (1|Stand/SOB)
-                    + (1|SubplotID/Plot), 
+hunModel <- glmmTMB(hrhun ~ Treatment
+                    + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
-                    data = fuelsPlot)
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
 
 
 #Model checks
@@ -291,24 +298,23 @@ summary(hunModel)
 
 
 #Inference and marginal means on the response (proportion) scale
-hunEmm <- emmeans(hunModel, ~ Treatment|Year, type = "response")
+hunEmm <- emmeans(hunModel, ~ Treatment, type = "response")
 summary(hunEmm)             #marginal means and CIs
 pairs(hunEmm)               #treatment contrasts within each year as proportions
 plot(hunEmm)
 
 
 #1000-hr fuels####
-thouModel <- glmmTMB(hrthou ~ Treatment*Year
-                    + (1|Stand/SOB)
-                    + (1|SubplotID/Plot), 
+thouModel <- glmmTMB(hrthou ~ Treatment
+                    + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
-                    data = fuelsPlot)
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
 
 
 #Model checks
-oneRes <- simulateResiduals(thouModel, n = 1000)
-plot(oneRes, quantreg = F)
+thouRes <- simulateResiduals(thouModel, n = 1000)
+plot(thouRes, quantreg = F)
 testDispersion(oneRes) # p < 0.05 then model is over or under dispersed
 testZeroInflation(oneRes) # p < 0.05 model is zero inflated
 
@@ -317,19 +323,18 @@ summary(thouModel)
 
 
 #Inference and marginal means on the response (proportion) scale
-thouEmm <- emmeans(thouModel, ~ Treatment|Year, type = "response")
+thouEmm <- emmeans(thouModel, ~ Treatment, type = "response")
 summary(thouEmm)             #marginal means and CIs
 pairs(thouEmm)               #treatment contrasts within each year as proportions
 plot(thouEmm)
 
 
 #litter and duff depth####
-landdModel <- glmmTMB(landd ~ Treatment*Year
-                    + (1|Stand/SOB)
-                    + (1|SubplotID/Plot), 
+landdModel <- glmmTMB(landd ~ Treatment
+                    + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
-                    data = fuelsPlot)
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
 
 
 #Model checks
@@ -343,7 +348,7 @@ summary(landdModel)
 
 
 #Inference and marginal means on the response (proportion) scale
-landdEmm <- emmeans(landdModel, ~ Treatment|Year, type = "response")
+landdEmm <- emmeans(landdModel, ~ Treatment, type = "response")
 summary(landdEmm)             #marginal means and CIs
 pairs(landdEmm)               #treatment contrasts within each year as proportions
 plot(landdEmm)
