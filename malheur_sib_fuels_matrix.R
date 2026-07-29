@@ -166,17 +166,192 @@ fuelsKW <- fuelsKW %>% left_join(treatments %>% select(Plot, Treatment), by = "P
 #transect direction level
 fuels <- rbind(fuelsKW, fuels25)
 
+#adding a season of burn (SOB), interval of burn (IB), and unique combinations columns to the dataframe
+fuels <- fuels %>% 
+  mutate(SOB = case_when(
+    (Treatment == "Fall 5") ~ "Fall",
+    (Treatment == "Fall 15") ~ "Fall",
+    (Treatment == "Spring 5") ~ "Spring",
+    (Treatment == "Spring 15") ~ "Spring",
+    (Treatment == "Control") ~ "Control")) %>%
+  mutate(SOB = as.factor(SOB))
+
+fuels <- fuels %>% 
+  mutate(IB = case_when(
+    (Treatment == "Fall 5") ~ "5 yr",
+    (Treatment == "Fall 15") ~ "15 yr",
+    (Treatment == "Spring 5") ~ "5 yr",
+    (Treatment == "Spring 15") ~ "15 yr",
+    (Treatment == "Control") ~ "0 yr")) %>%
+  mutate(IB = as.factor(IB))
+
+#adding plot and subplot ID for SOB and IB
+fuels$PlotID <- paste(fuels$Stand, fuels$SOB, sep = " ")
+fuels$SubplotID <- paste(fuels$PlotID, fuels$IB, sep = " ")
+
+#defining column types
+fuels <- fuels %>%
+  mutate(Year = as.factor(Year),
+         Plot = as.factor(Plot),
+         Stand = as.factor(Stand),
+         Direction = as.factor(Direction),
+         Treatment = as.factor(Treatment),
+         SOB = as.factor(SOB),
+         IB = as.factor(IB),
+         PlotID = as.factor(PlotID), 
+         SubplotID = as.factor(SubplotID))
+
+
 #averaging to the plot level
-fuelsPlot <- fuels %>% group_by(Year, Treatment, Stand, Plot) %>%
+fuelsPlot <- fuels %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, SubplotID, Plot) %>%
   summarise(hrone = mean(hrone, na.rm = TRUE),
             hrten = mean(hrten, na.rm = TRUE),
             hrhun = mean(hrhun, na.rm = TRUE),
-            hrthou = mean(hrthou, na.rm = TRUE)) %>%
+            hrthou = mean(hrthou, na.rm = TRUE),
+            landd = mean(landd, na.rm = TRUE)) %>%
   ungroup()
 
 
 #exporting####
 write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
 write.csv(fuelsPlot, paste0(output, "/Fuels_plot.csv"))
+
+
+#averaging to the IB level####
+fuelssplit <- fuelsPlot %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, SubplotID) %>%
+  summarise(hrone = mean(hrone, na.rm = TRUE),
+            hrten = mean(hrten, na.rm = TRUE),
+            hrhun = mean(hrhun, na.rm = TRUE),
+            hrthou = mean(hrthou, na.rm = TRUE),
+            landd = mean(landd, na.rm = TRUE)) %>%
+  ungroup()
+
+
+#######################################
+#GLMMs####
+#1-hr fuels####
+oneModel <- glmmTMB(hrone ~ Treatment
+                    + (1|Stand/SOB),
+                    #ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
+
+
+#Model checks
+oneRes <- simulateResiduals(oneModel, n = 1000)
+plot(oneRes, quantreg = F)
+testDispersion(oneRes) # p < 0.05 then model is over or under dispersed
+testZeroInflation(oneRes) # p < 0.05 model is zero inflated
+
+Anova(oneModel)
+summary(oneModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+oneEmm <- emmeans(oneModel, ~ Treatment, type = "response")
+summary(oneEmm)             #marginal means and CIs
+pairs(oneEmm)               #treatment contrasts within each year as proportions
+plot(oneEmm)
+
+
+#10-hr fuels####
+tenModel <- glmmTMB(hrten ~ Treatment
+                    + (1|Stand/SOB), 
+                    #ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
+
+
+#Model checks
+tenRes <- simulateResiduals(tenModel, n = 1000)
+plot(tenRes, quantreg = F)
+testDispersion(tenRes) # p < 0.05 then model is over or under dispersed
+testZeroInflation(tenRes) # p < 0.05 model is zero inflated
+
+Anova(tenModel)
+summary(tenModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+tenEmm <- emmeans(tenModel, ~ Treatment, type = "response")
+summary(tenEmm)             #marginal means and CIs
+pairs(tenEmm)               #treatment contrasts within each year as proportions
+plot(tenEmm)
+
+
+#100-hr fuels####
+hunModel <- glmmTMB(hrhun ~ Treatment
+                    + (1|Stand/SOB), 
+                    #ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
+
+
+#Model checks
+hunRes <- simulateResiduals(hunModel, n = 1000)
+plot(hunRes, quantreg = F)
+testDispersion(hunRes) # p < 0.05 then model is over or under dispersed
+testZeroInflation(hunRes) # p < 0.05 model is zero inflated
+
+Anova(hunModel)
+summary(hunModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+hunEmm <- emmeans(hunModel, ~ Treatment, type = "response")
+summary(hunEmm)             #marginal means and CIs
+pairs(hunEmm)               #treatment contrasts within each year as proportions
+plot(hunEmm)
+
+
+#1000-hr fuels####
+thouModel <- glmmTMB(hrthou ~ Treatment
+                    + (1|Stand/SOB), 
+                    #ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
+
+
+#Model checks
+thouRes <- simulateResiduals(thouModel, n = 1000)
+plot(thouRes, quantreg = F)
+testDispersion(oneRes) # p < 0.05 then model is over or under dispersed
+testZeroInflation(oneRes) # p < 0.05 model is zero inflated
+
+Anova(thouModel)
+summary(thouModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+thouEmm <- emmeans(thouModel, ~ Treatment, type = "response")
+summary(thouEmm)             #marginal means and CIs
+pairs(thouEmm)               #treatment contrasts within each year as proportions
+plot(thouEmm)
+
+
+#litter and duff depth####
+landdModel <- glmmTMB(landd ~ Treatment
+                    + (1|Stand/SOB), 
+                    #ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
+                    data = fuelssplit %>% filter(Year == "2025"))
+
+
+#Model checks
+landdRes <- simulateResiduals(landdModel, n = 1000)
+plot(landdRes, quantreg = F)
+testDispersion(landdRes) # p < 0.05 then model is over or under dispersed
+testZeroInflation(landdRes) # p < 0.05 model is zero inflated
+
+Anova(landdModel)
+summary(landdModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+landdEmm <- emmeans(landdModel, ~ Treatment, type = "response")
+summary(landdEmm)             #marginal means and CIs
+pairs(landdEmm)               #treatment contrasts within each year as proportions
+plot(landdEmm)
+
 
 
