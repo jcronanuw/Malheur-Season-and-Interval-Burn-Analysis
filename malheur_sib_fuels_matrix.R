@@ -5,6 +5,10 @@
 
 
 library(tidyverse)
+library(emmeans)
+library(glmmTMB)
+library(DHARMa)
+library(car)
 
 #set input & output folders to import data####
 ##dataframe folders
@@ -212,11 +216,6 @@ fuelsPlot <- fuels %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, Subplot
   ungroup()
 
 
-#exporting####
-write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
-write.csv(fuelsPlot, paste0(output, "/Fuels_plot.csv"))
-
-
 #averaging to the IB level####
 fuelssplit <- fuelsPlot %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, SubplotID) %>%
   summarise(hrone = mean(hrone, na.rm = TRUE),
@@ -225,6 +224,62 @@ fuelssplit <- fuelsPlot %>% group_by(Year, Stand, Treatment, SOB, IB, PlotID, Su
             hrthou = mean(hrthou, na.rm = TRUE),
             landd = mean(landd, na.rm = TRUE)) %>%
   ungroup()
+
+
+#histograms####
+hist(fuelssplit$hrone, breaks = seq(from = 0, to = 0.15, by = 0.01))
+hist(fuelssplit$hrten, breaks = seq(from = 0, to = 5, by = 0.1))
+hist(fuelssplit$hrhun, breaks = seq(from = 0, to = 4, by = 0.1))
+hist(fuelssplit$hrthou, breaks = seq(from = 0, to = 35, by = 1))
+hist(fuelssplit$landd, breaks = seq(from = 0, to = 5, by = 0.5))
+
+
+#averaging to the treatment level####
+fuelstreat <- fuelssplit %>% group_by(Year, SOB, IB, Treatment) %>%
+  summarise(hrone = mean(hrone, na.rm = TRUE),
+            hrten = mean(hrten, na.rm = TRUE),
+            hrhun = mean(hrhun, na.rm = TRUE),
+            hrthou = mean(hrthou, na.rm = TRUE),
+            landd = mean(landd, na.rm = TRUE)) %>%
+  ungroup()
+
+
+#making a table of treatment means####
+
+
+#exporting####
+write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
+write.csv(fuelssplit, paste0(output, "/Fuels_plot.csv"))
+write.csv(fuelstreat, paste0(output, "/Fuels_treatment.csv"))
+
+#######################################
+#graphing####
+fuelsgraph <- fuels %>% select(Year, Stand, SOB, IB, Treatment, Plot, Direction, hrone, hrten, hrhun, hrthou, landd)
+fuelsgraph <- fuelsgraph %>% pivot_longer(col= (hrone:landd), names_to = "Fuel", values_to = "Load")
+
+fuelsgraph$Treatment <- factor(fuelsgraph$Treatment, levels = c("Control", "Fall 5", "Fall 15", "Spring 5", "Spring 15"))
+fuelsgraph$Fuel <- factor(fuelsgraph$Fuel, levels = c("hrone", "hrten", "hrhun", "hrthou", "landd"))
+fuelsgraph$Year <- factor(fuelsgraph$Year, levels = c("2012", "1314", "2025"))
+
+twentyfive <- fuelsgraph %>% filter(Year == "2025")
+
+
+(ggplot(fuelsgraph %>% filter(!Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
+   geom_boxplot() +
+   stat_summary(fun = mean, 
+                geom = "point", 
+                position = position_dodge(width = 0.76),
+                shape = 18, 
+                size = 2, 
+                color = "red") +
+   facet_wrap(~Fuel, scales = "free_y") +
+   theme_bw(13) + 
+   theme(legend.position = "bottom",
+         legend.title = element_text(size = 12),
+         legend.text = element_text(size = 10)) + 
+   scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Fuel type", y = "Mg/ha") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 60, hjust = 1))
 
 
 #######################################
@@ -258,7 +313,7 @@ plot(oneEmm)
 tenModel <- glmmTMB(hrten ~ Treatment
                     + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(link = "log"), 
+                    family = gaussian(), 
                     data = fuelssplit %>% filter(Year == "2025"))
 
 
@@ -283,7 +338,7 @@ plot(tenEmm)
 hunModel <- glmmTMB(hrhun ~ Treatment
                     + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(link = "log"), 
+                    family = gaussian(), 
                     data = fuelssplit %>% filter(Year == "2025"))
 
 
@@ -333,7 +388,7 @@ plot(thouEmm)
 landdModel <- glmmTMB(landd ~ Treatment
                     + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(link = "log"), 
+                    family = gaussian(), 
                     data = fuelssplit %>% filter(Year == "2025"))
 
 
