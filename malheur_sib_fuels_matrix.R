@@ -9,6 +9,10 @@ library(emmeans)
 library(glmmTMB)
 library(DHARMa)
 library(car)
+library(glmmTMB)
+library(DHARMa)
+library(car)
+library(emmeans)
 
 #set input & output folders to import data####
 ##dataframe folders
@@ -536,7 +540,7 @@ oneModel <- glmmTMB(hrone ~ Treatment
                     family = tweedie(link = "log"), 
                     data = fuelssplit %>% filter(Year == "2025"))
 
-
+hist(fuelssplit$hrone %>% filter(Year == "2025"))
 #Model checks
 oneRes <- simulateResiduals(oneModel, n = 1000)
 plot(oneRes, quantreg = F)
@@ -559,9 +563,11 @@ tenModel <- glmmTMB(hrten ~ Treatment
                     + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
                     family = gaussian(), 
+                    ziformula = ~ Treatment,
+                    family = tweedie(link = "log"), 
                     data = fuelssplit %>% filter(Year == "2025"))
 
-
+diagnose(tenModel)
 #Model checks
 tenRes <- simulateResiduals(tenModel, n = 1000)
 plot(tenRes, quantreg = F)
