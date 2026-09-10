@@ -15,6 +15,8 @@ library(car)
 input <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Fuels"
 output <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Fuels"
 
+output1 <- "C:/Users/NathanWade/Box/01. nathan.wade Workspace/Season of burn"
+
 #importing data
 fine25 <- read.csv(paste0(input, "/2025_fuels_1_10_100_hr.csv"))
 big25 <- read.csv(paste0(input, "/2025_fuels_1000_hr.csv"))
@@ -164,6 +166,12 @@ fuelsKW <- fuelsKW %>% filter(!Stand == "D17")
 #assigning treatment
 fuelsKW <- fuelsKW %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
 
+#changin 1314 to 2013/2014
+fuelsKW <- fuelsKW %>% mutate(
+  Year = case_when(
+    Year == "1314" ~ "2013/2014",
+    TRUE ~ Year))
+
 
 #################################################
 #joining the Westlind and Kerns fuels with 2025 fuels####
@@ -259,11 +267,35 @@ fuelsgraph <- fuelsgraph %>% pivot_longer(col= (hrone:landd), names_to = "Fuel",
 
 fuelsgraph$Treatment <- factor(fuelsgraph$Treatment, levels = c("Control", "Fall 5", "Fall 15", "Spring 5", "Spring 15"))
 fuelsgraph$Fuel <- factor(fuelsgraph$Fuel, levels = c("hrone", "hrten", "hrhun", "hrthou", "landd"))
-fuelsgraph$Year <- factor(fuelsgraph$Year, levels = c("2012", "1314", "2025"))
+fuelsgraph$Year <- factor(fuelsgraph$Year, levels = c("2012", "2013/2014", "2025"))
 
-twentyfive <- fuelsgraph %>% filter(Year == "2025")
+# adding letters from model outputs
+letters <- read.csv(paste0(output1, "/letters.csv"))
+
+## defining column types
+letters <- letters %>% mutate(Year = as.factor(Year), 
+                              Treatment = as.factor(Treatment),
+                              Fuel = as.factor(Fuel))
 
 
+## calculating the maximum fuel loading to assign letter positions
+letter_positions <- fuelsgraph %>% group_by(Year, Treatment, Fuel) %>%
+  summarise(y_position = max(Load, na.rm = TRUE), .groups = 'drop') %>%
+  left_join(letters, by = c("Year", "Treatment", "Fuel")) 
+
+letter_positions <- letter_positions %>% 
+  filter(!Year == "2012" & Treatment = "Fall 5" | )
+
+letter_positions <- letter_positions %>%
+mutate(y_position = case_when(
+  (Fuel == "hrone") ~ y_position + 0.3,
+  (Fuel == "hrten") ~ y_position + 3,
+  (Fuel == "hrhun") ~ y_position + 3,
+  (Fuel == "hrthou") ~ y_position + 15,
+  (Fuel == "landd") ~ y_position + 3))
+
+
+#4 panel graph of every year####
 (ggplot(fuelsgraph %>% filter(!Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
    geom_boxplot() +
    stat_summary(fun = mean, 
@@ -280,6 +312,219 @@ twentyfive <- fuelsgraph %>% filter(Year == "2025")
    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
   labs(x = "Fuel type", y = "Mg/ha") + 
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 60, hjust = 1))
+
+
+# 2025 graphs####
+twentyfive <- fuelsgraph %>% filter(Year == "2025")
+
+## one-hr fuels
+(ggplot(twentyfive %>% filter(Fuel == "hrone"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = NULL, y = "Mg/ha")
+
+## ten-hr fuels
+(ggplot(twentyfive %>% filter(Fuel == "hrten"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = NULL, y = "Mg/ha")
+
+## hundred-hr fuels
+(ggplot(twentyfive %>% filter(Fuel == "hrhun"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = NULL, y = "Mg/ha")
+
+## thousand-hr fuels
+(ggplot(twentyfive %>% filter(Fuel == "hrthou"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = NULL, y = "Mg/ha")
+
+## litter and duff depth
+(ggplot(twentyfive %>% filter(Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = NULL, y = "Depth (cm)")
+
+
+# 2013/2014 and 2025 graphs####
+fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
+
+## one-hr fuels
+(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrone"), aes(x = Year, y = Load, fill = Treatment)) +
+   geom_boxplot() +
+   stat_summary(fun = mean, 
+                geom = "point", 
+                position = position_dodge(width = 0.76),
+                shape = 18, 
+                size = 2, 
+                color = "red") +
+    geom_text(data = letter_positions %>% filter(Fuel == "hrone"),
+              aes(x = Year, 
+                  y = y_position,
+                  group = Treatment,
+                  label = .group1),
+              position = position_dodge(width = 0.75),
+              inherit.aes = FALSE) + 
+   #facet_wrap(~Fuel, scales = "free_y") +
+   theme_bw(13) + 
+   theme(legend.position = "bottom",
+         legend.title = element_text(size = 12),
+         legend.text = element_text(size = 10)) + 
+   scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
+
+## ten-hr fuels
+(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrten"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    geom_text(data = letter_positions %>% filter(Fuel == "hrten"),
+              aes(x = Year, 
+                  y = y_position,
+                  group = Treatment,
+                  label = .group1),
+              position = position_dodge(width = 0.75),
+              inherit.aes = FALSE) + 
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
+
+## hundred-hr fuels
+(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrhun"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    geom_text(data = letter_positions %>% filter(Fuel == "hrhun"),
+              aes(x = Year, 
+                  y = y_position,
+                  group = Treatment,
+                  label = .group1),
+              position = position_dodge(width = 0.75),
+              inherit.aes = FALSE) + 
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
+
+## thousand-hr fuels
+(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrthou"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    geom_text(data = letter_positions %>% filter(Fuel == "hrthou"),
+              aes(x = Year, 
+                  y = y_position,
+                  group = Treatment,
+                  label = .group1),
+              position = position_dodge(width = 0.75),
+              inherit.aes = FALSE) + 
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
+
+## litter and duff depth
+(ggplot(fuelsgraph1325 %>% filter(Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
+    geom_boxplot() +
+    stat_summary(fun = mean, 
+                 geom = "point", 
+                 position = position_dodge(width = 0.76),
+                 shape = 18, 
+                 size = 2, 
+                 color = "red") +
+    geom_text(data = letter_positions %>% filter(Fuel == "landd"),
+              aes(x = Year, 
+                  y = y_position,
+                  group = Treatment,
+                  label = .group1),
+              position = position_dodge(width = 0.75),
+              inherit.aes = FALSE) + 
+    #facet_wrap(~Fuel, scales = "free_y") +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Depth (cm)")
 
 
 #######################################
