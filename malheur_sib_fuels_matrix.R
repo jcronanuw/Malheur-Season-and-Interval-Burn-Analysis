@@ -5,10 +5,6 @@
 
 
 library(tidyverse)
-library(emmeans)
-library(glmmTMB)
-library(DHARMa)
-library(car)
 library(glmmTMB)
 library(DHARMa)
 library(car)
@@ -265,7 +261,7 @@ write.csv(fuelssplit, paste0(output, "/Fuels_plot.csv"))
 write.csv(fuelstreat, paste0(output, "/Fuels_treatment.csv"))
 
 #######################################
-#graphing####
+#graphing and adding letters####
 fuelsgraph <- fuels %>% select(Year, Stand, SOB, IB, Treatment, Plot, Direction, hrone, hrten, hrhun, hrthou, landd)
 fuelsgraph <- fuelsgraph %>% pivot_longer(col= (hrone:landd), names_to = "Fuel", values_to = "Load")
 
@@ -273,31 +269,48 @@ fuelsgraph$Treatment <- factor(fuelsgraph$Treatment, levels = c("Control", "Fall
 fuelsgraph$Fuel <- factor(fuelsgraph$Fuel, levels = c("hrone", "hrten", "hrhun", "hrthou", "landd"))
 fuelsgraph$Year <- factor(fuelsgraph$Year, levels = c("2012", "2013/2014", "2025"))
 
+## adding a longer fuel name column
+fuelsgraph <- fuelsgraph %>% 
+  mutate(FuelsName = case_when(
+    (Fuel == "hrone") ~ "1-hr",
+    (Fuel == "hrten") ~ "10-hr",
+    (Fuel == "hrhun") ~ "100-hr",
+    (Fuel == "hrthou") ~ "1000-hr",
+    (Fuel == "landd") ~ "Litter/duff"))
+
+fuelsgraph$FuelsName <- factor(fuelsgraph$FuelsName, levels = c("1-hr", "10-hr", "100-hr", "1000-hr", "Litter/duff"))
+
 # adding letters from model outputs
 letters <- read.csv(paste0(output1, "/letters.csv"))
 
 ## defining column types
 letters <- letters %>% mutate(Year = as.factor(Year), 
                               Treatment = as.factor(Treatment),
-                              Fuel = as.factor(Fuel))
+                              Fuel = as.factor(Fuel),
+                              FuelsName = as.factor(FuelsName))
 
 
 ## calculating the maximum fuel loading to assign letter positions
-letter_positions <- fuelsgraph %>% group_by(Year, Treatment, Fuel) %>%
+letter_positions <- fuelsgraph %>% group_by(Year, Treatment, FuelsName) %>%
   summarise(y_position = max(Load, na.rm = TRUE), .groups = 'drop') %>%
-  left_join(letters, by = c("Year", "Treatment", "Fuel")) 
-
-letter_positions <- letter_positions %>% 
-  filter(!Year == "2012" & Treatment = "Fall 5" | )
+  left_join(letters, by = c("Year", "Treatment", "FuelsName")) 
 
 letter_positions <- letter_positions %>%
 mutate(y_position = case_when(
-  (Fuel == "hrone") ~ y_position + 0.3,
-  (Fuel == "hrten") ~ y_position + 3,
-  (Fuel == "hrhun") ~ y_position + 3,
-  (Fuel == "hrthou") ~ y_position + 15,
-  (Fuel == "landd") ~ y_position + 3))
+  (FuelsName == "1-hr") ~ y_position + 0.3,
+  (FuelsName == "10-hr") ~ y_position + 3,
+  (FuelsName == "100-hr") ~ y_position + 3,
+  (FuelsName == "1000-hr") ~ y_position + 15,
+  (FuelsName == "Litter/duff") ~ y_position + 3))
 
+## removing 2012 treatments that aren't Control
+letter_positions <- letter_positions[!is.na(letter_positions$.group),]
+
+## changing 2012 to 2013/2014
+letter_positions <- letter_positions %>% mutate(
+  Year = case_when(
+    Year == "2012" ~ "2013/2014",
+    TRUE ~ Year))
 
 #4 panel graph of every year####
 (ggplot(fuelsgraph %>% filter(!Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
@@ -408,10 +421,16 @@ twentyfive <- fuelsgraph %>% filter(Year == "2025")
 
 
 # 2013/2014 and 2025 graphs####
-fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
+fuelsgraph1325 <- fuelsgraph %>% 
+  mutate(Year = case_when(
+    (Year == "2012" & Treatment == "Control") ~ "2013/2014",
+    TRUE ~ Year))
+
+fuelsgraph1325 <- fuelsgraph1325 %>% filter(!Year == "2012")
+
 
 ## one-hr fuels
-(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrone"), aes(x = Year, y = Load, fill = Treatment)) +
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "1-hr"), aes(x = Year, y = Load, fill = Treatment)) +
    geom_boxplot() +
    stat_summary(fun = mean, 
                 geom = "point", 
@@ -419,7 +438,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
                 shape = 18, 
                 size = 2, 
                 color = "red") +
-    geom_text(data = letter_positions %>% filter(Fuel == "hrone"),
+    geom_text(data = letter_positions %>% filter(FuelsName == "1-hr"),
               aes(x = Year, 
                   y = y_position,
                   group = Treatment,
@@ -435,7 +454,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
   labs(x = "Year", y = "Mg/ha")
 
 ## ten-hr fuels
-(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrten"), aes(x = Year, y = Load, fill = Treatment)) +
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "10-hr"), aes(x = Year, y = Load, fill = Treatment)) +
     geom_boxplot() +
     stat_summary(fun = mean, 
                  geom = "point", 
@@ -443,7 +462,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
                  shape = 18, 
                  size = 2, 
                  color = "red") +
-    geom_text(data = letter_positions %>% filter(Fuel == "hrten"),
+    geom_text(data = letter_positions %>% filter(FuelsName == "10-hr"),
               aes(x = Year, 
                   y = y_position,
                   group = Treatment,
@@ -459,7 +478,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
   labs(x = "Year", y = "Mg/ha")
 
 ## hundred-hr fuels
-(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrhun"), aes(x = Year, y = Load, fill = Treatment)) +
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "100-hr"), aes(x = Year, y = Load, fill = Treatment)) +
     geom_boxplot() +
     stat_summary(fun = mean, 
                  geom = "point", 
@@ -467,7 +486,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
                  shape = 18, 
                  size = 2, 
                  color = "red") +
-    geom_text(data = letter_positions %>% filter(Fuel == "hrhun"),
+    geom_text(data = letter_positions %>% filter(FuelsName == "100-hr"),
               aes(x = Year, 
                   y = y_position,
                   group = Treatment,
@@ -483,7 +502,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
   labs(x = "Year", y = "Mg/ha")
 
 ## thousand-hr fuels
-(ggplot(fuelsgraph1325 %>% filter(Fuel == "hrthou"), aes(x = Year, y = Load, fill = Treatment)) +
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "1000-hr"), aes(x = Year, y = Load, fill = Treatment)) +
     geom_boxplot() +
     stat_summary(fun = mean, 
                  geom = "point", 
@@ -491,7 +510,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
                  shape = 18, 
                  size = 2, 
                  color = "red") +
-    geom_text(data = letter_positions %>% filter(Fuel == "hrthou"),
+    geom_text(data = letter_positions %>% filter(FuelsName == "1000-hr"),
               aes(x = Year, 
                   y = y_position,
                   group = Treatment,
@@ -507,7 +526,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
   labs(x = "Year", y = "Mg/ha")
 
 ## litter and duff depth
-(ggplot(fuelsgraph1325 %>% filter(Fuel == "landd"), aes(x = Year, y = Load, fill = Treatment)) +
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "Litter/duff"), aes(x = Year, y = Load, fill = Treatment)) +
     geom_boxplot() +
     stat_summary(fun = mean, 
                  geom = "point", 
@@ -515,7 +534,7 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
                  shape = 18, 
                  size = 2, 
                  color = "red") +
-    geom_text(data = letter_positions %>% filter(Fuel == "landd"),
+    geom_text(data = letter_positions %>% filter(FuelsName == "Litter/duff"),
               aes(x = Year, 
                   y = y_position,
                   group = Treatment,
@@ -529,6 +548,56 @@ fuelsgraph1325 <- fuelsgraph %>% filter(!Year == "2012")
           legend.text = element_text(size = 10)) + 
     scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
   labs(x = "Year", y = "Depth (cm)")
+
+
+## combined 1 and 10-hr fuel graphs####
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "1-hr" | FuelsName == "10-hr"), aes(x = Year, y = Load, fill = Treatment)) +
+   geom_boxplot() +
+   stat_summary(fun = mean, 
+                geom = "point", 
+                position = position_dodge(width = 0.76),
+                shape = 18, 
+                size = 2, 
+                color = "red") +
+   geom_text(data = letter_positions %>% filter(FuelsName == "1-hr" | FuelsName == "10-hr"),
+             aes(x = Year, 
+                 y = y_position,
+                 group = Treatment,
+                 label = .group1),
+             position = position_dodge(width = 0.75),
+             inherit.aes = FALSE) + 
+   facet_wrap(~FuelsName, scales = "free_y") +
+   theme_bw(13) + 
+   theme(legend.position = "bottom",
+         legend.title = element_text(size = 12),
+         legend.text = element_text(size = 10)) + 
+   scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
+
+
+## combined 100 and 1000-hr fuel graphs####
+(ggplot(fuelsgraph1325 %>% filter(FuelsName == "100-hr" | FuelsName == "1000-hr"), aes(x = Year, y = Load, fill = Treatment)) +
+   geom_boxplot() +
+   stat_summary(fun = mean, 
+                geom = "point", 
+                position = position_dodge(width = 0.76),
+                shape = 18, 
+                size = 2, 
+                color = "red") +
+   geom_text(data = letter_positions %>% filter(FuelsName == "100-hr" | FuelsName == "1000-hr"),
+             aes(x = Year, 
+                 y = y_position,
+                 group = Treatment,
+                 label = .group1),
+             position = position_dodge(width = 0.75),
+             inherit.aes = FALSE) + 
+   facet_wrap(~FuelsName, scales = "free_y") +
+   theme_bw(13) + 
+   theme(legend.position = "bottom",
+         legend.title = element_text(size = 12),
+         legend.text = element_text(size = 10)) + 
+   scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha")
 
 
 #######################################
@@ -562,9 +631,7 @@ plot(oneEmm)
 tenModel <- glmmTMB(hrten ~ Treatment
                     + (1|Stand/SOB), 
                     #ziformula = ~ Treatment,
-                    family = gaussian(), 
-                    ziformula = ~ Treatment,
-                    family = tweedie(link = "log"), 
+                    family = gaussian(),  
                     data = fuelssplit %>% filter(Year == "2025"))
 
 diagnose(tenModel)
@@ -660,4 +727,153 @@ pairs(landdEmm)               #treatment contrasts within each year as proportio
 plot(landdEmm)
 
 
+##############################################
+#GLMMS for both 2013/14 and 2025####
+#creating a dataframe that has 2012 controls with the 2013/14 and 2025 data####
+fuelssplitYr <- fuelssplit %>%  
+  mutate(Year = case_when(
+    (Year == "2012" & Treatment == "Control") ~ "2013/2014",
+    TRUE ~ Year))
 
+fuelssplitYr <- fuelssplitYr %>% filter(!Year == "2012")
+
+fuelssplitYr$Year <- factor(fuelssplitYr$Year, levels = c("2013/2014", "2025"))
+
+
+#histograms for the new dataset####
+hist(fuelssplitYr$hrone, breaks = seq(from = 0, to = 0.13, by = 0.01))
+hist(fuelssplitYr$hrten, breaks = seq(from = 0, to = 5, by = 0.1))
+hist(fuelssplitYr$hrhun, breaks = seq(from = 0, to = 4, by = 0.1))
+hist(fuelssplitYr$hrthou, breaks = seq(from = 0, to = 35, by = 1))
+hist(fuelssplitYr$landd, breaks = seq(from = 0, to = 5, by = 0.5))
+
+
+#1-hr fuels####
+oneModelYr <- glmmTMB(hrone ~ Treatment*Year
+                    + (1|Stand/SOB)
+                    + (1|SubplotID), 
+                    ziformula = ~ Treatment,
+                    family = tweedie(), 
+                    data = fuelssplitYr)
+
+fixef(oneModelYr)
+
+#Model checks
+oneResYr <- simulateResiduals(oneModelYr, n = 1000)
+plot(oneResYr, quantreg = F)
+testDispersion(oneModelYr) # p < 0.05 then model is over or under dispersed
+testZeroInflation(oneModelYr) # p < 0.05 model is zero inflated
+
+Anova(oneModelYr)
+summary(oneModelYr)
+
+
+#Inference and marginal means on the response (proportion) scale
+oneEmmYr <- emmeans(oneModelYr, ~ Treatment, type = "response")
+summary(oneEmmYr)             #marginal means and CIs
+pairs(oneEmmYr)               #treatment contrasts within each year as proportions
+plot(oneEmmYr)
+
+
+#10-hr fuels####
+tenModelYr <- glmmTMB(hrten ~ Treatment*Year
+                    + (1|Stand/SOB) 
+                    + (1|SubplotID), 
+                    #ziformula = ~ Treatment,
+                    family = tweedie(), 
+                    data = fuelssplitYr)
+
+diagnose(tenModelYr)
+#Model checks
+tenResYr <- simulateResiduals(tenModelYr, n = 1000)
+plot(tenResYr, quantreg = F)
+testDispersion(tenModelYr) # p < 0.05 then model is over or under dispersed
+testZeroInflation(tenModelYr) # p < 0.05 model is zero inflated
+
+Anova(tenModel)
+summary(tenModel)
+
+
+#Inference and marginal means on the response (proportion) scale
+tenEmmYr <- emmeans(tenModelYr, ~ Treatment, type = "response")
+summary(tenEmmYr)             #marginal means and CIs
+pairs(tenEmmYr)               #treatment contrasts within each year as proportions
+plot(tenEmmYr)
+
+
+#100-hr fuels####
+hunModelYr <- glmmTMB(hrhun ~ Treatment*Year
+                    + (1|Stand/SOB) 
+                    + (1|SubplotID),
+                    #ziformula = ~ Treatment,
+                    family = gaussian(), 
+                    data = fuelssplitYr)
+
+
+#Model checks
+hunResYr <- simulateResiduals(hunModelYr, n = 1000)
+plot(hunResYr, quantreg = F)
+testDispersion(hunModelYr) # p < 0.05 then model is over or under dispersed
+testZeroInflation(hunModelYr) # p < 0.05 model is zero inflated
+
+Anova(hunModelYr)
+summary(hunModelYr)
+
+
+#Inference and marginal means on the response (proportion) scale
+hunEmmYr <- emmeans(hunModelYr, ~ Treatment, type = "response")
+summary(hunEmmYr)             #marginal means and CIs
+pairs(hunEmmYr)               #treatment contrasts within each year as proportions
+plot(hunEmmYr)
+
+
+#1000-hr fuels####
+thouModelYr <- glmmTMB(hrthou ~ Treatment*Year
+                     + (1|Stand/SOB) 
+                     + (1|SubplotID),
+                     #ziformula = ~ Treatment,
+                     family = tweedie(link = "log"), 
+                     data = fuelssplitYr)
+
+
+#Model checks
+thouResYr <- simulateResiduals(thouModelYr, n = 1000)
+plot(thouResYr, quantreg = F)
+testDispersion(thouModelYr) # p < 0.05 then model is over or under dispersed
+testZeroInflation(thouModelYr) # p < 0.05 model is zero inflated
+
+Anova(thouModelYr)
+summary(thouModelYr)
+
+
+#Inference and marginal means on the response (proportion) scale
+thouEmmYr <- emmeans(thouModelYr, ~ Treatment, type = "response")
+summary(thouEmmYr)             #marginal means and CIs
+pairs(thouEmmYr)               #treatment contrasts within each year as proportions
+plot(thouEmmYr)
+
+
+#litter and duff depth####
+landdModelYr <- glmmTMB(landd ~ Treatment*Year
+                      + (1|Stand/SOB) 
+                      + (1|SubplotID),
+                      #ziformula = ~ Treatment,
+                      family = gaussian(), 
+                      data = fuelssplitYr)
+
+
+#Model checks
+landdResYr <- simulateResiduals(landdModelYr, n = 1000)
+plot(landdResYr, quantreg = F)
+testDispersion(landdModelYr) # p < 0.05 then model is over or under dispersed
+testZeroInflation(landdModelYr) # p < 0.05 model is zero inflated
+
+Anova(landdModelYr)
+summary(landdModelYr)
+
+
+#Inference and marginal means on the response (proportion) scale
+landdEmmYr <- emmeans(landdModelYr, ~ Treatment, type = "response")
+summary(landdEmmYr)             #marginal means and CIs
+pairs(landdEmmYr)               #treatment contrasts within each year as proportions
+plot(landdEmmYr)
