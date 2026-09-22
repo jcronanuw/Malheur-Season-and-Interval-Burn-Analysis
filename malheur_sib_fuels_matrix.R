@@ -753,7 +753,7 @@ oneModelYr <- glmmTMB(hrone ~ Treatment*Year
                     + (1|Stand/SOB)
                     + (1|SubplotID), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
+                    family = gaussian(), 
                     #control = glmmTMBControl(optimizer = "nlmimb"),
                     data = fuelssplitYr)
 
@@ -787,7 +787,7 @@ tenModelYr <- glmmTMB(hrten ~ Treatment*Year
                     + (1|Stand/SOB) 
                     + (1|SubplotID), 
                     #ziformula = ~ Treatment,
-                    family = tweedie(), 
+                    family = gaussian(), 
                     data = fuelssplitYr)
 
 diagnose(tenModelYr)
