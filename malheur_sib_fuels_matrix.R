@@ -752,11 +752,18 @@ hist(fuelssplitYr$landd, breaks = seq(from = 0, to = 5, by = 0.5))
 oneModelYr <- glmmTMB(hrone ~ Treatment*Year
                     + (1|Stand/SOB)
                     + (1|SubplotID), 
-                    ziformula = ~ Treatment,
+                    #ziformula = ~ Treatment,
                     family = tweedie(), 
+                    #control = glmmTMBControl(optimizer = "nlmimb"),
                     data = fuelssplitYr)
 
 fixef(oneModelYr)
+
+
+library(nlme)
+oneModelYr <- lme(hrone ~ Treatment*Year, 
+                 random = ~1|Stand/SOB,
+                 data = fuessplitYr)
 
 #Model checks
 oneResYr <- simulateResiduals(oneModelYr, n = 1000)
@@ -769,7 +776,7 @@ summary(oneModelYr)
 
 
 #Inference and marginal means on the response (proportion) scale
-oneEmmYr <- emmeans(oneModelYr, ~ Treatment, type = "response")
+oneEmmYr <- emmeans(oneModelYr, ~ Treatment|Year, type = "response")
 summary(oneEmmYr)             #marginal means and CIs
 pairs(oneEmmYr)               #treatment contrasts within each year as proportions
 plot(oneEmmYr)
@@ -790,12 +797,12 @@ plot(tenResYr, quantreg = F)
 testDispersion(tenModelYr) # p < 0.05 then model is over or under dispersed
 testZeroInflation(tenModelYr) # p < 0.05 model is zero inflated
 
-Anova(tenModel)
-summary(tenModel)
+Anova(tenModelYr)
+summary(tenModelYr)
 
 
 #Inference and marginal means on the response (proportion) scale
-tenEmmYr <- emmeans(tenModelYr, ~ Treatment, type = "response")
+tenEmmYr <- emmeans(tenModelYr, ~ Treatment|Year, type = "response")
 summary(tenEmmYr)             #marginal means and CIs
 pairs(tenEmmYr)               #treatment contrasts within each year as proportions
 plot(tenEmmYr)
@@ -821,7 +828,7 @@ summary(hunModelYr)
 
 
 #Inference and marginal means on the response (proportion) scale
-hunEmmYr <- emmeans(hunModelYr, ~ Treatment, type = "response")
+hunEmmYr <- emmeans(hunModelYr, ~ Treatment|Year, type = "response")
 summary(hunEmmYr)             #marginal means and CIs
 pairs(hunEmmYr)               #treatment contrasts within each year as proportions
 plot(hunEmmYr)
@@ -832,7 +839,7 @@ thouModelYr <- glmmTMB(hrthou ~ Treatment*Year
                      + (1|Stand/SOB) 
                      + (1|SubplotID),
                      #ziformula = ~ Treatment,
-                     family = tweedie(link = "log"), 
+                     family = tweedie(), 
                      data = fuelssplitYr)
 
 
@@ -847,7 +854,7 @@ summary(thouModelYr)
 
 
 #Inference and marginal means on the response (proportion) scale
-thouEmmYr <- emmeans(thouModelYr, ~ Treatment, type = "response")
+thouEmmYr <- emmeans(thouModelYr, ~ Treatment|Year, type = "response")
 summary(thouEmmYr)             #marginal means and CIs
 pairs(thouEmmYr)               #treatment contrasts within each year as proportions
 plot(thouEmmYr)
@@ -873,7 +880,7 @@ summary(landdModelYr)
 
 
 #Inference and marginal means on the response (proportion) scale
-landdEmmYr <- emmeans(landdModelYr, ~ Treatment, type = "response")
+landdEmmYr <- emmeans(landdModelYr, ~ Treatment|Year, type = "response")
 summary(landdEmmYr)             #marginal means and CIs
 pairs(landdEmmYr)               #treatment contrasts within each year as proportions
 plot(landdEmmYr)
