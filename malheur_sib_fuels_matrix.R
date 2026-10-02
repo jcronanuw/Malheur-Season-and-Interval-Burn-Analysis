@@ -884,3 +884,27 @@ landdEmmYr <- emmeans(landdModelYr, ~ Treatment|Year, type = "response")
 summary(landdEmmYr)             #marginal means and CIs
 pairs(landdEmmYr)               #treatment contrasts within each year as proportions
 plot(landdEmmYr)
+
+#######################################
+# coarse fuel bar graph with means and SD####
+# prepping the dataset
+coarsebar <- fuelsgraph1325 %>% group_by(Year, Treatment, Fuel, FuelsName) %>%
+  summarise(MeanLoad = mean(Load, na.rm = TRUE),
+            SDLoad = sd(Load, na.rm = TRUE)) %>%
+  ungroup()
+
+
+(ggplot(coarsebar %>% filter(FuelsName == "100-hr" | FuelsName == "1000-hr"), aes(x = Year, y = MeanLoad, fill = Treatment)) +
+    geom_bar(stat = "identity", position = position_dodge()) +
+    geom_errorbar(aes(ymin = MeanLoad, ymax = MeanLoad + SDLoad),
+                  width = 0, position = position_dodge(0.9)) +
+    facet_wrap(~FuelsName, scales = "free_y") +
+    #scale_y_break(c(20000, 80000)) +
+    theme_bw(13) + 
+    theme(legend.position = "bottom",
+          legend.title = element_text(size = 12),
+          legend.text = element_text(size = 10)) + 
+    scale_fill_manual(values = c("Control" = "khaki", "Fall 5" = "coral", "Fall 15" = "coral3", "Spring 5" = "springgreen2", "Spring 15" = "springgreen4"))) +
+  labs(x = "Year", y = "Mg/ha") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 60, hjust = 1))
+
