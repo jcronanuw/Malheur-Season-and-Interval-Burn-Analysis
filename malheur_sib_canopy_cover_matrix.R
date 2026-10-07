@@ -16,10 +16,17 @@ library(readr)#??? - read.csv() {utils}.
 
 #Data
 # Map usernames to file paths
+<<<<<<< Updated upstream
 user_paths_ground <- c(
   Nat   = "",
   Becky     = "",
   jcronan = "",
+=======
+user_paths_canopy <- c(
+  NathanWade   = "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy",
+  Becky = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy",
+>>>>>>> Stashed changes
   esande02 = "",
   margaretkoontz = ""
 )
@@ -27,9 +34,23 @@ user_paths_ground <- c(
 #Lookup Tables
 # Map usernames to file paths
 user_paths_lut <- c(
+<<<<<<< Updated upstream
   Nat   = "",
   Becky     = "",
   jcronan = "",
+=======
+  NathanWade   = "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy/",
+  Becky     = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Canopy/",
+  esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/lut_burn_severity_file_names.csv",
+  mak600 = "C://Users//mak600//Documents//Malheur//Canopy Data//canopy_file_lut.csv")
+
+# Map usernames to file paths
+user_paths_saved_data <- c(
+  NathanWade   = "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Severity_indices/Canopy/",
+  Becky = "",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Severity_indices/Canopy",
+>>>>>>> Stashed changes
   esande02 = "",
   margaretkoontz = ""
 )
