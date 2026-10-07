@@ -30,16 +30,13 @@ user_paths_lut <- c(
   Nate   = "C:/Users/NathanWade/Box/SIB/Cronan/Wade/3_Data/01_Raw_Data/Severity_indices/Ground_cover/",
   Becky     = "",
   jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Severity_indices/Ground_cover/",
-  esande02 = "C:/Users/esande02/Downloads/FERA/Malheur/burn_severity/lut_burn_severity_file_names.csv",
-  mak600 = "C://Users//mak600//Documents//Malheur//Canopy Data//canopy_file_lut.csv")
+)
 
 # Outgoing (saved) data
 user_paths_saved_data <- c(
   Nate   = "C:/Users/NathanWade/Box/SIB/Cronan/Wade/3_Data/02_Clean_Data/Severity_indices/Ground_cover/",
   Becky = "",
   jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Severity_indices/Ground_cover",
-  esande02 = "",
-  mak600 = ""
 )
 
 # Detect current user
@@ -52,9 +49,15 @@ if (!current_user %in% names(user_paths_ground)) {
 
 
 # Check if user exists in mapping for lut files
-if (!current_user %in% names(user_paths_canopy)) {
+if (!current_user %in% names(user_paths_lut)) {
   stop("No file path configured for this user: ", current_user)
 }
+
+# Check if user exists in mapping for outgoing files
+if (!current_user %in% names(user_paths_saved)) {
+  stop("No file path configured for this user: ", current_user)
+}
+
 
 #Ground lookup tables
 #Plot list
@@ -389,18 +392,18 @@ grid.arrange(
 
 #Cronan:
 #There is a very high value for litter cover
-ground_combined_1[ground_combined_2$year == 2003 & 
+ground_combined_2[ground_combined_2$year == 2003 & 
                     ground_combined_2$ground_type == "litter" & 
                     ground_combined_2$cover_percent > 100,]
 #Two values should be corrected.
 #1 ----------------------------------------------------
-ground_combined_1[ground_combined_2$year == 2003 & 
+ground_combined_2[ground_combined_2$year == 2003 & 
                     ground_combined_2$Plot == 32 & 
                     ground_combined_2$Quad == "EQ1",]
 #Correct Plot 32 EQ1 from 199 to 99.5
 
 #2 ----------------------------------------------------
-ground_combined_1[ground_combined_2$year == 2003 & 
+ground_combined_2[ground_combined_2$year == 2003 & 
                     ground_combined_2$Plot == 69 & 
                     ground_combined_2$Quad == "SQ1",]
 #Correct Plot 32 EQ1 from 966 to 96
@@ -534,7 +537,7 @@ ground_combined_2[ground_combined_2$year == 2015 &
 
 
 #There is a very low values for mineral soil cover
-ground_combined_1[ground_combined_2$year == 2015 & 
+ground_combined_2[ground_combined_2$year == 2015 & 
                     ground_combined_2$ground_type == "mineral" & 
                     ground_combined_2$cover_percent < 0,]
 #Single value should be corrected.
