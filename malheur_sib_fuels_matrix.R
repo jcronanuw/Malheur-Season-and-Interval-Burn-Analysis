@@ -10,19 +10,50 @@ library(DHARMa)
 library(car)
 library(emmeans)
 
+
+#Data
+#Input data file paths:
+user_paths_input <- c(
+  nwade = "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Fuels",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Fuels"
+)
+
+#Data
+#Output data file paths:
+user_paths_output <- c(
+  nwade = "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Fuels",
+  jcronan = "C:/Users/jcronan/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Fuels"
+)
+
+
+#Detect current user
+current_user <- Sys.info()[["user"]]
+
+# Check if user exists in mapping for data files
+if (!current_user %in% names(user_paths_input)) {
+  stop("No file path configured for this user: ", current_user)
+}
+
+# Check if user exists in mapping for lut files
+if (!current_user %in% names(user_paths_output)) {
+  stop("No file path configured for this user: ", current_user)
+}
+
 #set input & output folders to import data####
 ##dataframe folders
-input <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/01_Raw_Data/Fuels"
-output <- "C:/Users/NathanWade/Box/SIB/Cronan Wade/3_Data/02_Clean_Data/Fuels"
-
 output1 <- "C:/Users/NathanWade/Box/01. nathan.wade Workspace/Season of burn"
 
 #importing data
-fine25 <- read.csv(paste0(input, "/2025_fuels_1_10_100_hr.csv"))
-big25 <- read.csv(paste0(input, "/2025_fuels_1000_hr.csv"))
-litter25 <- read.csv(paste0(input, "/2025_fuels_litter_duff.csv"))
-fuelsKW <- read.csv(paste0(input, "/KernsWestlind_Fuels_12_13_14.csv"))
-treatments <- read.csv(paste0(input, "/Plot_treatments.csv"))
+fine25 <- read.csv(paste0(user_paths_input[current_user], 
+                          "/2025_fuels_1_10_100_hr.csv"))
+big25 <- read.csv(paste0(user_paths_input[current_user], 
+                         "/2025_fuels_1000_hr.csv"))
+litter25 <- read.csv(paste0(user_paths_input[current_user], 
+                            "/2025_fuels_litter_duff.csv"))
+fuelsKW <- read.csv(paste0(user_paths_input[current_user], 
+                           "/KernsWestlind_Fuels_12_13_14.csv"))
+treatments <- read.csv(paste0(user_paths_input[current_user], 
+                              "/Plot_treatments.csv"))
 
 #removing unnecessary columns
 fine25 <- fine25[, -c(9)]
@@ -166,7 +197,7 @@ fuelsKW <- fuelsKW %>% filter(!Stand == "D17")
 #assigning treatment
 fuelsKW <- fuelsKW %>% left_join(treatments %>% select(Plot, Treatment), by = "Plot")
 
-#changin 1314 to 2013/2014
+#changing 1314 to 2013/2014
 fuelsKW <- fuelsKW %>% mutate(
   Year = case_when(
     Year == "1314" ~ "2013/2014",
@@ -256,9 +287,9 @@ fuelstreat <- fuelssplit %>% group_by(Year, SOB, IB, Treatment) %>%
 
 
 #exporting####
-write.csv(fuels, paste0(output, "/Fuels_direction.csv"))
-write.csv(fuelssplit, paste0(output, "/Fuels_plot.csv"))
-write.csv(fuelstreat, paste0(output, "/Fuels_treatment.csv"))
+write.csv(fuels, paste0(user_paths_output[current_user], "/Fuels_direction.csv"))
+write.csv(fuelssplit, paste0(user_paths_output[current_user], "/Fuels_plot.csv"))
+write.csv(fuelstreat, paste0(user_paths_output[current_user], "/Fuels_treatment.csv"))
 
 #######################################
 #graphing and adding letters####
@@ -281,7 +312,7 @@ fuelsgraph <- fuelsgraph %>%
 fuelsgraph$FuelsName <- factor(fuelsgraph$FuelsName, levels = c("1-hr", "10-hr", "100-hr", "1000-hr", "Litter/duff"))
 
 # adding letters from model outputs
-letters <- read.csv(paste0(output1, "/letters.csv"))
+letters <- read.csv(paste0(user_paths_output[current_user], "/letters.csv"))
 
 ## defining column types
 letters <- letters %>% mutate(Year = as.factor(Year), 
@@ -603,6 +634,14 @@ fuelsgraph1325 <- fuelsgraph1325 %>% filter(!Year == "2012")
 #######################################
 #GLMMs####
 #1-hr fuels####
+
+#..............................................................................
+#Cronan
+#Model will not run
+#Error in UseMethod("filter") : 
+#  no applicable method for 'filter' applied to an object of class "c('double', 'numeric')"
+hist(fuelssplit$hrone %>% filter(Year == "2025"))
+
 oneModel <- glmmTMB(hrone ~ Treatment
                     + (1|Stand/SOB),
                     #ziformula = ~ Treatment,
@@ -610,6 +649,16 @@ oneModel <- glmmTMB(hrone ~ Treatment
                     data = fuelssplit %>% filter(Year == "2025"))
 
 hist(fuelssplit$hrone %>% filter(Year == "2025"))
+
+#..............................................................................
+#Cronan
+#Model will not run
+#Error in UseMethod("filter") : 
+#  no applicable method for 'filter' applied to an object of class "c('double', 'numeric')"
+#Try
+hist(fuelssplit$hrone[fuelssplit$Year == "2025"])
+#Okay
+
 #Model checks
 oneRes <- simulateResiduals(oneModel, n = 1000)
 plot(oneRes, quantreg = F)
